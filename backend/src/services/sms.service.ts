@@ -40,7 +40,7 @@ export class SmsService {
           },
           body: JSON.stringify({
             destination: phoneNumber,
-            body: message,
+            message: message,
           }),
         }
       );
@@ -77,7 +77,7 @@ export class SmsService {
           },
           body: JSON.stringify({
             destination: phoneNumber,
-            body: message,
+            message: message,
           }),
         }
       );
