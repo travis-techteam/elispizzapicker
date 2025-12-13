@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum AuthTokenType {
+  SMS_CODE
+  MAGIC_LINK
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String   @unique
+  email     String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events     Event[]
+  votes      Vote[]
+  authTokens AuthToken[]
+
+  @@map("users")
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  deadline    DateTime
+  isActive    Boolean  @default(false)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy    User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  pizzaOptions PizzaOption[]
+  votes        Vote[]
+
+  @@map("events")
+}
+
+model PizzaOption {
+  id           String   @id @default(uuid())
+  eventId      String
+  name         String
+  toppings     String[]
+  toppingCount Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  event       Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  voteChoices VoteChoice[]
+
+  @@map("pizza_options")
+}
+
+model Vote {
+  id         String   @id @default(uuid())
+  userId     String
+  eventId    String
+  sliceCount Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  choices VoteChoice[]
+
+  @@unique([userId, eventId])
+  @@map("votes")
+}
+
+model VoteChoice {
+  id            String @id @default(uuid())
+  voteId        String
+  pizzaOptionId String
+  priority      Int // 1, 2, or 3
+
+  vote        Vote        @relation(fields: [voteId], references: [id], onDelete: Cascade)
+  pizzaOption PizzaOption @relation(fields: [pizzaOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([voteId, priority])
+  @@map("vote_choices")
+}
+
+model AuthToken {
+  id        String        @id @default(uuid())
+  userId    String
+  token     String
+  type      AuthTokenType
+  expiresAt DateTime
+  used      Boolean       @default(false)
+  createdAt DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_tokens")
+}

@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: pizza-picker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-eli_pizza_picker}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pizza-picker-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-eli_pizza_picker}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      FRONTEND_URL: ${FRONTEND_URL:-https://elispizzapicker.com}
+      APP_URL: ${APP_URL:-https://elispizzapicker.com}
+      NETSAPIENS_API_URL: ${NETSAPIENS_API_URL}
+      NETSAPIENS_DOMAIN: ${NETSAPIENS_DOMAIN}
+      NETSAPIENS_USER: ${NETSAPIENS_USER}
+      NETSAPIENS_API_KEY: ${NETSAPIENS_API_KEY}
+      SMTP2GO_API_KEY: ${SMTP2GO_API_KEY}
+      SMTP_FROM: ${SMTP_FROM:-noreply@elispizzapicker.com}
+    ports:
+      - "3001:3001"
+
+  # Nginx Reverse Proxy with SSL (production)
+  nginx:
+    image: nginx:alpine
+    container_name: pizza-picker-nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    profiles:
+      - production
+
+  # Certbot for SSL certificates
+  certbot:
+    image: certbot/certbot
+    container_name: pizza-picker-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
