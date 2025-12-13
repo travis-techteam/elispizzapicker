@@ -40,6 +40,7 @@ export class EmailService {
           subject: subject,
           text_body: textBody,
           html_body: htmlBody,
+          track_clicks: false,  // Disable click tracking to preserve magic link URLs
         }),
       });
 
