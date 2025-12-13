@@ -12,7 +12,7 @@ const voteSchema = z.object({
   choices: z
     .array(
       z.object({
-        pizzaOptionId: z.string().uuid(),
+        pizzaOptionId: z.string().min(1),
         priority: z.union([z.literal(1), z.literal(2), z.literal(3)]),
       })
     )
