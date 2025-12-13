@@ -101,7 +101,15 @@ router.post('/verify-code', async (req: Request, res: Response) => {
       return;
     }
 
-    res.json(result);
+    // Wrap in data property for frontend ApiResponse format
+    res.json({
+      success: true,
+      data: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        user: result.user,
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({
@@ -129,7 +137,15 @@ router.post('/verify-magic-link', async (req: Request, res: Response) => {
       return;
     }
 
-    res.json(result);
+    // Wrap in data property for frontend ApiResponse format
+    res.json({
+      success: true,
+      data: {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        user: result.user,
+      },
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({
