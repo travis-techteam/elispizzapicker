@@ -1,5 +1,6 @@
-import { Role } from '@prisma/client';
 import { Request } from 'express';
+
+export type Role = 'ADMIN' | 'USER';
 
 export interface JwtPayload {
   userId: string;

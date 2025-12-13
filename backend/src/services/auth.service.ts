@@ -44,15 +44,15 @@ export class AuthService {
 
   // Generate JWT access token
   generateAccessToken(payload: JwtPayload): string {
-    return jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn,
+    return jwt.sign(payload as object, config.jwt.secret, {
+      expiresIn: config.jwt.expiresIn as string,
     });
   }
 
   // Generate JWT refresh token
   generateRefreshToken(payload: JwtPayload): string {
-    return jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.refreshExpiresIn,
+    return jwt.sign(payload as object, config.jwt.secret, {
+      expiresIn: config.jwt.refreshExpiresIn as string,
     });
   }
 
