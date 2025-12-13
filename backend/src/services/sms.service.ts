@@ -29,9 +29,9 @@ export class SmsService {
       const message = `Your Eli's Pizza Picker verification code is: ${code}. This code expires in 10 minutes.`;
 
       // Netsapiens API call
-      // Note: The exact endpoint and format may need adjustment based on Netsapiens API docs
+      // Endpoint: /domains/{domain}/users/{user}/messages
       const response = await fetch(
-        `${this.apiUrl}/ns-api/v2/domains/${this.domain}/users/${this.user}/messages`,
+        `${this.apiUrl}/domains/${this.domain}/users/${this.user}/messages`,
         {
           method: 'POST',
           headers: {
@@ -40,7 +40,7 @@ export class SmsService {
           },
           body: JSON.stringify({
             to: phoneNumber,
-            message: message,
+            body: message,
             type: 'sms',
           }),
         }
@@ -69,7 +69,7 @@ export class SmsService {
       const message = `${inviterName} has invited you to Eli's Pizza Picker! Visit ${config.appUrl} to vote on pizza for the next dinner.`;
 
       const response = await fetch(
-        `${this.apiUrl}/ns-api/v2/domains/${this.domain}/users/${this.user}/messages`,
+        `${this.apiUrl}/domains/${this.domain}/users/${this.user}/messages`,
         {
           method: 'POST',
           headers: {
@@ -78,7 +78,7 @@ export class SmsService {
           },
           body: JSON.stringify({
             to: phoneNumber,
-            message: message,
+            body: message,
             type: 'sms',
           }),
         }
