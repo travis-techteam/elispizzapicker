@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Home, Vote, BarChart3, Settings, LogOut, Pizza } from 'lucide-react';
+import { Home, Vote, BarChart3, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../utils/cn';
 
@@ -16,10 +16,9 @@ export default function Layout() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="bg-primary text-white safe-area-inset-top">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-lg mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Pizza className="w-6 h-6" />
-            <span className="font-bold text-lg">Eli's Pizza Picker</span>
+            <img src="/logo.png" alt="Eli's Pizza Picker" className="h-10 w-auto" />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm opacity-90">{user?.name}</span>

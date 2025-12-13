@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pizza, Phone, Mail, ArrowRight } from 'lucide-react';
+import { Phone, Mail, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import Button from '../components/ui/Button';
@@ -82,10 +82,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-full mb-4">
-            <Pizza className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-text">Eli's Pizza Picker</h1>
+          <img src="/logo.png" alt="Eli's Pizza Picker" className="h-32 w-auto mx-auto mb-2" />
           <p className="text-text-muted mt-2">Vote on pizza for group dinners</p>
         </div>
 

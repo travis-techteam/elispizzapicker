@@ -8,13 +8,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon-32.png', 'apple-touch-icon.png', 'logo.png'],
       manifest: {
         name: "Eli's Pizza Picker",
         short_name: 'Pizza Picker',
         description: 'Vote on pizza for group dinners',
-        theme_color: '#DC2626',
-        background_color: '#FFFBEB',
+        theme_color: '#4A6741',
+        background_color: '#FDFCF8',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
