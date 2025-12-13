@@ -59,6 +59,7 @@ export interface PizzaOrderRecommendation {
       pizzaName: string;
       priority: number;
     }[];
+    allocatedTo: string;
   }[];
   summary: {
     totalVoters: number;

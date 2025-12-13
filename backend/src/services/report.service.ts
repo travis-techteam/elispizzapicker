@@ -2,15 +2,22 @@ import prisma from '../utils/prisma.js';
 import { PizzaOrderRecommendation } from '../types/index.js';
 
 const SLICES_PER_PIZZA = 8;
-const PRIORITY_WEIGHTS = { 1: 3, 2: 2, 3: 1 };
-const TOTAL_WEIGHT = 6; // 3 + 2 + 1
+const MIN_SLICES_FOR_HALF = 4;
+
+interface VoterAllocation {
+  oderId: string;  // kept for internal tracking (vote's userId)
+  userName: string;
+  sliceCount: number;
+  choices: { pizzaOptionId: string; pizzaName: string; priority: number }[];
+  allocatedTo: string | null; // pizzaOptionId where slices are allocated
+}
 
 interface PizzaDemand {
   pizzaOptionId: string;
   name: string;
   toppingCount: number;
   totalSlices: number;
-  weightedScore: number;
+  voterCount: number;
 }
 
 interface HalfPizzaCandidate {
@@ -18,7 +25,6 @@ interface HalfPizzaCandidate {
   name: string;
   toppingCount: number;
   remainingSlices: number;
-  weightedScore: number;
 }
 
 export class ReportService {
@@ -41,58 +47,113 @@ export class ReportService {
       where: { eventId },
     });
 
-    // Build voter breakdown
-    const voterBreakdown = votes.map((vote) => ({
-      userId: vote.userId,
-      userName: vote.user.name,
-      sliceCount: vote.sliceCount,
-      choices: vote.choices
+    // Create a map of pizza options for quick lookup
+    type PizzaOption = typeof pizzaOptions[number];
+    const pizzaMap = new Map<string, PizzaOption>(pizzaOptions.map((p) => [p.id, p]));
+
+    // Initialize voter allocations - everyone starts allocated to their 1st choice
+    const voterAllocations: VoterAllocation[] = votes.map((vote) => {
+      const sortedChoices = vote.choices
         .sort((a, b) => a.priority - b.priority)
-        .map((choice) => ({
-          pizzaName: choice.pizzaOption.name,
-          priority: choice.priority,
-        })),
-    }));
+        .map((c) => ({
+          pizzaOptionId: c.pizzaOptionId,
+          pizzaName: c.pizzaOption.name,
+          priority: c.priority,
+        }));
 
-    // Calculate demand per pizza option
-    const demandMap = new Map<string, PizzaDemand>();
+      return {
+        oderId: vote.userId,
+        userName: vote.user.name,
+        sliceCount: vote.sliceCount,
+        choices: sortedChoices,
+        allocatedTo: sortedChoices[0]?.pizzaOptionId || null, // Start with 1st choice
+      };
+    });
 
-    // Initialize demand for all options
+    // Waterfall allocation: iterate until stable
+    let changed = true;
+    let iterations = 0;
+    const maxIterations = 10; // Prevent infinite loops
+
+    while (changed && iterations < maxIterations) {
+      changed = false;
+      iterations++;
+
+      // Calculate current demand per pizza
+      const demandMap = new Map<string, number>();
+      pizzaOptions.forEach((p) => demandMap.set(p.id, 0));
+
+      voterAllocations.forEach((voter) => {
+        if (voter.allocatedTo) {
+          demandMap.set(
+            voter.allocatedTo,
+            (demandMap.get(voter.allocatedTo) || 0) + voter.sliceCount
+          );
+        }
+      });
+
+      // Find options that don't have enough demand (< MIN_SLICES_FOR_HALF)
+      const unviableOptions = new Set<string>();
+      demandMap.forEach((slices, pizzaId) => {
+        if (slices > 0 && slices < MIN_SLICES_FOR_HALF) {
+          unviableOptions.add(pizzaId);
+        }
+      });
+
+      // Move voters from unviable options to their next choice
+      voterAllocations.forEach((voter) => {
+        if (voter.allocatedTo && unviableOptions.has(voter.allocatedTo)) {
+          // Find current priority
+          const currentChoice = voter.choices.find(
+            (c) => c.pizzaOptionId === voter.allocatedTo
+          );
+          if (currentChoice) {
+            // Find next priority choice
+            const nextChoice = voter.choices.find(
+              (c) => c.priority > currentChoice.priority
+            );
+            if (nextChoice) {
+              voter.allocatedTo = nextChoice.pizzaOptionId;
+              changed = true;
+            } else {
+              // No more choices - mark as unallocated
+              voter.allocatedTo = null;
+              changed = true;
+            }
+          }
+        }
+      });
+    }
+
+    // Calculate final demand
+    const finalDemandMap = new Map<string, PizzaDemand>();
     pizzaOptions.forEach((option) => {
-      demandMap.set(option.id, {
+      finalDemandMap.set(option.id, {
         pizzaOptionId: option.id,
         name: option.name,
         toppingCount: option.toppingCount,
         totalSlices: 0,
-        weightedScore: 0,
+        voterCount: 0,
       });
     });
 
-    // Process each vote
-    votes.forEach((vote) => {
-      const sliceCount = vote.sliceCount;
-
-      vote.choices.forEach((choice) => {
-        const priority = choice.priority as 1 | 2 | 3;
-        const weight = PRIORITY_WEIGHTS[priority];
-
-        // Allocate slices based on priority weight
-        // Priority 1 gets 3/6 = 50%, Priority 2 gets 2/6 = 33%, Priority 3 gets 1/6 = 17%
-        const allocatedSlices = Math.round((sliceCount * weight) / TOTAL_WEIGHT);
-
-        const demand = demandMap.get(choice.pizzaOptionId);
+    voterAllocations.forEach((voter) => {
+      if (voter.allocatedTo) {
+        const demand = finalDemandMap.get(voter.allocatedTo);
         if (demand) {
-          demand.totalSlices += allocatedSlices;
-          demand.weightedScore += weight;
+          demand.totalSlices += voter.sliceCount;
+          demand.voterCount++;
         }
-      });
+      }
     });
 
     // Convert to array and filter out zero-demand options
-    const demands = Array.from(demandMap.values()).filter((d) => d.totalSlices > 0);
+    const demands = Array.from(finalDemandMap.values()).filter(
+      (d) => d.totalSlices > 0
+    );
 
-    // Sort by weighted score (highest first)
-    demands.sort((a, b) => b.weightedScore - a.weightedScore);
+    // Sort by total slices (highest first)
+    demands.sort((a, b) => b.totalSlices - a.totalSlices);
 
     // Calculate full pizzas and remainders
     const fullPizzas: { name: string; quantity: number; slices: number }[] = [];
@@ -111,13 +172,12 @@ export class ReportService {
       }
 
       // Only consider remainders of 4+ slices as viable half-pizza candidates
-      if (remainder >= 4) {
+      if (remainder >= MIN_SLICES_FOR_HALF) {
         halfCandidates.push({
           pizzaOptionId: demand.pizzaOptionId,
           name: demand.name,
           toppingCount: demand.toppingCount,
           remainingSlices: remainder,
-          weightedScore: demand.weightedScore,
         });
       }
     });
@@ -125,7 +185,6 @@ export class ReportService {
     // Match half pizzas by topping count
     const halfPizzas: { half1: string; half2: string; quantity: number }[] = [];
     const droppedOptions: string[] = [];
-    const usedCandidates = new Set<string>();
 
     // Group candidates by topping count
     const byToppingCount = new Map<number, HalfPizzaCandidate[]>();
@@ -137,8 +196,8 @@ export class ReportService {
 
     // Match pairs within each topping count group
     byToppingCount.forEach((group) => {
-      // Sort by weighted score to prioritize higher-priority options
-      group.sort((a, b) => b.weightedScore - a.weightedScore);
+      // Sort by remaining slices (highest first)
+      group.sort((a, b) => b.remainingSlices - a.remainingSlices);
 
       for (let i = 0; i < group.length - 1; i += 2) {
         if (i + 1 < group.length) {
@@ -147,8 +206,6 @@ export class ReportService {
             half2: group[i + 1].name,
             quantity: 1,
           });
-          usedCandidates.add(group[i].pizzaOptionId);
-          usedCandidates.add(group[i + 1].pizzaOptionId);
         }
       }
 
@@ -156,22 +213,39 @@ export class ReportService {
       if (group.length % 2 === 1) {
         const leftover = group[group.length - 1];
         droppedOptions.push(
-          `${leftover.name} (only ${leftover.remainingSlices} slices, no compatible half-pizza match)`
+          `${leftover.name} (${leftover.remainingSlices} slices, no compatible half-pizza match)`
         );
       }
     });
 
-    // Also track remainders that were too small (< 4 slices)
-    demands.forEach((demand) => {
-      const remainder = demand.totalSlices % SLICES_PER_PIZZA;
-      if (remainder > 0 && remainder < 4) {
-        droppedOptions.push(`${demand.name} (only ${remainder} extra slices, not enough for a half)`);
-      }
+    // Track voters who couldn't be allocated anywhere
+    const unallocatedVoters = voterAllocations.filter((v) => !v.allocatedTo);
+    if (unallocatedVoters.length > 0) {
+      unallocatedVoters.forEach((v) => {
+        droppedOptions.push(
+          `${v.userName}'s ${v.sliceCount} slices couldn't be allocated (no viable options)`
+        );
+      });
+    }
+
+    // Build voter breakdown showing where their slices actually went
+    const voterBreakdown = voterAllocations.map((voter) => {
+      const allocatedPizza = voter.allocatedTo ? pizzaMap.get(voter.allocatedTo) : null;
+      return {
+        userId: voter.oderId,
+        userName: voter.userName,
+        sliceCount: voter.sliceCount,
+        choices: voter.choices.map((c) => ({
+          pizzaName: c.pizzaName,
+          priority: c.priority,
+        })),
+        allocatedTo: allocatedPizza ? allocatedPizza.name : 'Not allocated',
+      };
     });
 
     // Calculate totals
     const totalFullPizzas = fullPizzas.reduce((sum, p) => sum + p.quantity, 0);
-    const totalHalfPizzas = halfPizzas.length; // Each half-pizza pair is 1 whole pizza
+    const totalHalfPizzas = halfPizzas.length;
     const totalPizzas = totalFullPizzas + totalHalfPizzas;
     const totalSlices = totalPizzas * SLICES_PER_PIZZA;
 

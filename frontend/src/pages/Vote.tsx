@@ -63,6 +63,8 @@ export default function Vote() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myVote', event?.id] });
       queryClient.invalidateQueries({ queryKey: ['votes', event?.id] });
+      queryClient.invalidateQueries({ queryKey: ['report', event?.id] });
+      queryClient.invalidateQueries({ queryKey: ['event', event?.id] });
       queryClient.invalidateQueries({ queryKey: ['activeEvent'] });
       navigate('/');
     },
