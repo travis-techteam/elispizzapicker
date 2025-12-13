@@ -20,16 +20,19 @@ RUN npx prisma generate --schema=./prisma/schema.prisma
 FROM node:20-alpine AS production
 WORKDIR /app
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
 # Install production dependencies
 COPY backend/package*.json ./
 RUN npm ci --omit=dev
 
+# Copy Prisma schema and generate client
+COPY prisma/ ./prisma/
+RUN npx prisma generate --schema=./prisma/schema.prisma
+
 # Copy built backend
 COPY --from=backend-build /app/backend/dist ./dist
-COPY --from=backend-build /app/backend/node_modules/.prisma ./node_modules/.prisma
-
-# Copy Prisma schema for migrations
-COPY prisma/ ./prisma/
 
 # Copy built frontend to serve as static files
 COPY --from=frontend-build /app/frontend/dist ./public
