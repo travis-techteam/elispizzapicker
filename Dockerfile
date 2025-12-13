@@ -12,9 +12,9 @@ WORKDIR /app/backend
 COPY backend/package*.json ./
 RUN npm ci
 COPY backend/ ./
-COPY prisma/ ../prisma/
+COPY prisma/ ./prisma/
 RUN npm run build
-RUN npx prisma generate
+RUN npx prisma generate --schema=./prisma/schema.prisma
 
 # Production stage
 FROM node:20-alpine AS production
@@ -26,7 +26,7 @@ RUN npm ci --omit=dev
 
 # Copy built backend
 COPY --from=backend-build /app/backend/dist ./dist
-COPY --from=backend-build /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=backend-build /app/backend/node_modules/.prisma ./node_modules/.prisma
 
 # Copy Prisma schema for migrations
 COPY prisma/ ./prisma/
