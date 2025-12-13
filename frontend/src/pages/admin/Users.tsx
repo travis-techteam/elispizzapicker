@@ -52,9 +52,13 @@ export default function AdminUsers() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: api.deleteUser,
+    mutationFn: (id: string) => api.deleteUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (err: Error) => {
+      console.error('Delete error:', err);
+      alert('Failed to delete user');
     },
   });
 
