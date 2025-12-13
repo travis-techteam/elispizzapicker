@@ -39,9 +39,8 @@ export class SmsService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            to: phoneNumber,
+            destination: phoneNumber,
             body: message,
-            type: 'sms',
           }),
         }
       );
@@ -77,9 +76,8 @@ export class SmsService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            to: phoneNumber,
+            destination: phoneNumber,
             body: message,
-            type: 'sms',
           }),
         }
       );
