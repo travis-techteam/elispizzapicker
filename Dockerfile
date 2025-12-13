@@ -15,6 +15,8 @@ COPY backend/ ./
 COPY prisma/ ./prisma/
 RUN npm run build
 RUN npx prisma generate --schema=./prisma/schema.prisma
+# Compile seed file
+RUN npx tsc ./prisma/seed.ts --outDir ./dist --esModuleInterop --module NodeNext --moduleResolution NodeNext --target ES2022
 
 # Production stage
 FROM node:20-alpine AS production
