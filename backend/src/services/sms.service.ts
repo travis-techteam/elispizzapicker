@@ -10,12 +10,14 @@ export class SmsService {
   private domain: string;
   private user: string;
   private apiKey: string;
+  private fromNumber: string;
 
   constructor() {
     this.apiUrl = config.netsapiens.apiUrl;
     this.domain = config.netsapiens.domain;
     this.user = config.netsapiens.user;
     this.apiKey = config.netsapiens.apiKey;
+    this.fromNumber = config.netsapiens.fromNumber;
   }
 
   async sendVerificationCode(phoneNumber: string, code: string): Promise<SendSmsResult> {
@@ -41,6 +43,7 @@ export class SmsService {
           body: JSON.stringify({
             destination: phoneNumber,
             message: message,
+            from: this.fromNumber,
           }),
         }
       );
@@ -78,6 +81,7 @@ export class SmsService {
           body: JSON.stringify({
             destination: phoneNumber,
             message: message,
+            from: this.fromNumber,
           }),
         }
       );

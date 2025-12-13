@@ -25,6 +25,7 @@ export const config = {
     domain: process.env.NETSAPIENS_DOMAIN || '',
     user: process.env.NETSAPIENS_USER || '',
     apiKey: process.env.NETSAPIENS_API_KEY || '',
+    fromNumber: process.env.NETSAPIENS_FROM_NUMBER || '',
   },
 
   smtp: {
