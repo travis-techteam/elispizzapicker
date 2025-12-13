@@ -44,6 +44,7 @@ export class SmsService {
             destination: phoneNumber,
             message: message,
             from: this.fromNumber,
+            type: 'sms',
           }),
         }
       );
@@ -82,6 +83,7 @@ export class SmsService {
             destination: phoneNumber,
             message: message,
             from: this.fromNumber,
+            type: 'sms',
           }),
         }
       );
