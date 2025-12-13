@@ -43,7 +43,7 @@ export class SmsService {
           body: JSON.stringify({
             destination: phoneNumber,
             message: message,
-            from: this.fromNumber,
+            from_num: this.fromNumber,
             type: 'sms',
           }),
         }
@@ -82,7 +82,7 @@ export class SmsService {
           body: JSON.stringify({
             destination: phoneNumber,
             message: message,
-            from: this.fromNumber,
+            from_num: this.fromNumber,
             type: 'sms',
           }),
         }
