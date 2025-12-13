@@ -1,6 +1,7 @@
 {
   "name": "eli-pizza-picker-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Backend API for Eli's Pizza Picker",
   "main": "dist/index.js",
   "scripts": {

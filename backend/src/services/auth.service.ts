@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config/index.js';
 import prisma from '../utils/prisma.js';
@@ -45,15 +45,15 @@ export class AuthService {
   // Generate JWT access token
   generateAccessToken(payload: JwtPayload): string {
     return jwt.sign(payload as object, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn as string,
-    });
+      expiresIn: config.jwt.expiresIn,
+    } as SignOptions);
   }
 
   // Generate JWT refresh token
   generateRefreshToken(payload: JwtPayload): string {
     return jwt.sign(payload as object, config.jwt.secret, {
-      expiresIn: config.jwt.refreshExpiresIn as string,
-    });
+      expiresIn: config.jwt.refreshExpiresIn,
+    } as SignOptions);
   }
 
   // Request SMS code
