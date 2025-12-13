@@ -22,7 +22,7 @@ WORKDIR /app
 
 # Install production dependencies
 COPY backend/package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy built backend
 COPY --from=backend-build /app/backend/dist ./dist
