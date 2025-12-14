@@ -8,7 +8,7 @@ const router = Router();
 
 // Validation schema
 const voteSchema = z.object({
-  sliceCount: z.number().int().min(1).max(20),
+  sliceCount: z.number().int().min(1).max(5),
   choices: z
     .array(
       z.object({
