@@ -1,5 +1,6 @@
 import prisma from '../utils/prisma.js';
 import { smsService } from './sms.service.js';
+import { sendNotification, isPushEnabled } from './push.service.js';
 import { config } from '../config/index.js';
 import logger from '../utils/logger.js';
 
@@ -73,15 +74,22 @@ export class ReminderService {
     let sent = 0;
     let failed = 0;
 
-    // Send reminders
+    // Send reminders via SMS and push
     for (const user of usersToRemind) {
       try {
-        const result = await this.sendReminderSms(
+        // Send SMS
+        const smsResult = await this.sendReminderSms(
           user.phone,
           eventName,
           deadline
         );
-        if (result) {
+
+        // Send push notification
+        if (isPushEnabled()) {
+          await this.sendReminderPush(user.id, eventName, deadline);
+        }
+
+        if (smsResult) {
           sent++;
         } else {
           failed++;
@@ -115,6 +123,34 @@ export class ReminderService {
 
     const result = await smsService.sendMessage(phone, message);
     return result.success;
+  }
+
+  /**
+   * Send a push notification reminder.
+   */
+  private async sendReminderPush(
+    userId: string,
+    eventName: string,
+    deadline: Date
+  ): Promise<boolean> {
+    const timeLeft = this.formatTimeUntil(deadline);
+
+    return sendNotification(userId, {
+      title: "Don't forget to vote!",
+      body: `"${eventName}" closes in ${timeLeft}. Tap to cast your vote now.`,
+      icon: '/pwa-192x192.png',
+      badge: '/favicon-32.png',
+      tag: 'voting-reminder',
+      data: {
+        url: `${config.appUrl}/vote`,
+      },
+      actions: [
+        {
+          action: 'vote',
+          title: 'Vote Now',
+        },
+      ],
+    });
   }
 
   /**

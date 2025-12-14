@@ -1,0 +1,41 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Only deploy on main branch after CI passes
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy to Production Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd ${{ secrets.APP_PATH || '/var/www/eli-pizza-picker' }}
+
+            # Pull latest changes
+            git pull origin main
+
+            # Run deployment script
+            ./deploy.sh --no-backup
+
+            echo "Deployment completed successfully!"
+
+      - name: Notify Deployment Success
+        if: success()
+        run: echo "Deployment to production completed successfully"
+
+      - name: Notify Deployment Failure
+        if: failure()
+        run: |
+          echo "Deployment failed! Check the logs above for details."
+          exit 1

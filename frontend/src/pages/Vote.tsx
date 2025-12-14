@@ -4,13 +4,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pizza, Minus, Plus, Clock, AlertCircle } from 'lucide-react';
+import { GripVertical, Pizza, Minus, Plus, Clock, AlertCircle, Users } from 'lucide-react';
 import { api } from '../services/api';
 import type { PizzaOption, VoteInput } from '../types';
 import Card, { CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingScreen from '../components/ui/LoadingScreen';
 import CountdownTimer from '../components/ui/CountdownTimer';
+import Toast from '../components/ui/Toast';
+import { useSocket } from '../context/SocketContext';
 import { cn } from '../utils/cn';
 
 interface SelectedPizza {
@@ -23,10 +25,13 @@ export default function Vote() {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { joinEvent, leaveEvent, onVoteUpdate, onVoteSubmitted, isConnected } = useSocket();
 
   const [selectedPizzas, setSelectedPizzas] = useState<SelectedPizza[]>([]);
   const [sliceCount, setSliceCount] = useState(3);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' } | null>(null);
+  const [liveVoteCount, setLiveVoteCount] = useState<number | null>(null);
 
   // Fetch active event or specific event
   const { data: eventResponse, isLoading: eventLoading } = useQuery({
@@ -57,6 +62,37 @@ export default function Vote() {
       );
     }
   }, [myVoteResponse]);
+
+  // Socket event subscriptions
+  useEffect(() => {
+    if (!event?.id || !isConnected) return;
+
+    // Join the event room
+    joinEvent(event.id);
+
+    // Listen for vote updates
+    const unsubVoteUpdate = onVoteUpdate((data) => {
+      if (data.eventId === event.id) {
+        setLiveVoteCount(data.voteCount);
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ['event', event.id] });
+        queryClient.invalidateQueries({ queryKey: ['votes', event.id] });
+      }
+    });
+
+    // Listen for when someone submits a vote
+    const unsubVoteSubmitted = onVoteSubmitted((data) => {
+      if (data.eventId === event.id) {
+        setToast({ message: `${data.userName} just voted!`, type: 'info' });
+      }
+    });
+
+    return () => {
+      leaveEvent(event.id);
+      unsubVoteUpdate();
+      unsubVoteSubmitted();
+    };
+  }, [event?.id, isConnected, joinEvent, leaveEvent, onVoteUpdate, onVoteSubmitted, queryClient]);
 
   // Submit vote mutation
   const submitMutation = useMutation({
@@ -184,15 +220,34 @@ export default function Vote() {
     });
   };
 
+  const displayVoteCount = liveVoteCount ?? event._count?.votes ?? 0;
+
   return (
     <div className="space-y-6">
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       <div>
         <h1 className="text-2xl font-bold text-text">{event.name}</h1>
-        <CountdownTimer
-          deadline={event.deadline}
-          onExpire={handleDeadlineExpired}
-          className="mt-1"
-        />
+        <div className="flex items-center gap-4 mt-1">
+          <CountdownTimer
+            deadline={event.deadline}
+            onExpire={handleDeadlineExpired}
+          />
+          <span className="flex items-center gap-1 text-sm text-text-muted">
+            <Users className="w-4 h-4" />
+            {displayVoteCount} {displayVoteCount === 1 ? 'vote' : 'votes'}
+            {isConnected && (
+              <span className="w-2 h-2 rounded-full bg-green-500 ml-1" title="Live updates active" />
+            )}
+          </span>
+        </div>
       </div>
 
       {/* Slice Count */}

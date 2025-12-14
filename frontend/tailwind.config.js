@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -44,11 +45,12 @@ export default {
           800: '#784D18',
           900: '#4A2F0F',
         },
-        background: '#FFFBF7',
-        surface: '#FFFFFF',
+        // Using CSS variables for theme-aware colors
+        background: 'var(--color-background)',
+        surface: 'var(--color-surface)',
         text: {
-          DEFAULT: '#1F2937',
-          muted: '#6B7280',
+          DEFAULT: 'var(--color-text)',
+          muted: 'var(--color-text-muted)',
         },
       },
       fontFamily: {

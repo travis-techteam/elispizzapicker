@@ -6,10 +6,12 @@
 # Usage: ./deploy.sh [options]
 #
 # Options:
-#   --no-backup     Skip database backup
-#   --no-migrate    Skip database migrations
-#   --rebuild       Force rebuild of Docker images (no cache)
-#   --help          Show this help message
+#   --no-backup       Skip database backup
+#   --no-migrate      Skip database migrations
+#   --rebuild         Force rebuild of Docker images (no cache)
+#   --generate-vapid  Generate VAPID keys for push notifications
+#   --check-env       Check environment variables only (no deploy)
+#   --help            Show this help message
 # =============================================================================
 
 set -e  # Exit on any error
@@ -31,6 +33,8 @@ COMPOSE_PROFILE="production"
 SKIP_BACKUP=false
 SKIP_MIGRATE=false
 FORCE_REBUILD=false
+GENERATE_VAPID=false
+CHECK_ENV_ONLY=false
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -47,8 +51,16 @@ while [[ $# -gt 0 ]]; do
             FORCE_REBUILD=true
             shift
             ;;
+        --generate-vapid)
+            GENERATE_VAPID=true
+            shift
+            ;;
+        --check-env)
+            CHECK_ENV_ONLY=true
+            shift
+            ;;
         --help)
-            head -20 "$0" | tail -15
+            head -20 "$0" | tail -17
             exit 0
             ;;
         *)
@@ -83,6 +95,56 @@ log_error() {
     echo "[$timestamp] ✗ $1" >> "$LOG_FILE"
 }
 
+# Generate VAPID keys for push notifications
+generate_vapid_keys() {
+    log "Generating VAPID keys for push notifications..."
+
+    # Check if Node.js is available (either locally or in Docker)
+    if command -v npx &> /dev/null; then
+        # Generate keys using web-push
+        local keys=$(npx web-push generate-vapid-keys --json 2>/dev/null)
+
+        if [ -n "$keys" ]; then
+            local public_key=$(echo "$keys" | grep -o '"publicKey":"[^"]*"' | cut -d'"' -f4)
+            local private_key=$(echo "$keys" | grep -o '"privateKey":"[^"]*"' | cut -d'"' -f4)
+
+            echo ""
+            echo "=============================================="
+            echo "  VAPID Keys Generated Successfully!"
+            echo "=============================================="
+            echo ""
+            echo "Add these to your .env file:"
+            echo ""
+            echo "VAPID_PUBLIC_KEY=${public_key}"
+            echo "VAPID_PRIVATE_KEY=${private_key}"
+            echo "VAPID_CONTACT_EMAIL=your-email@example.com"
+            echo ""
+            echo "=============================================="
+            echo ""
+
+            # Offer to append to .env
+            read -p "Would you like to append these to .env now? (y/n) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                echo "" >> "${SCRIPT_DIR}/.env"
+                echo "# Push Notification VAPID Keys (generated $(date '+%Y-%m-%d'))" >> "${SCRIPT_DIR}/.env"
+                echo "VAPID_PUBLIC_KEY=${public_key}" >> "${SCRIPT_DIR}/.env"
+                echo "VAPID_PRIVATE_KEY=${private_key}" >> "${SCRIPT_DIR}/.env"
+                echo "VAPID_CONTACT_EMAIL=admin@example.com" >> "${SCRIPT_DIR}/.env"
+                log_success "VAPID keys added to .env"
+                log_warning "Remember to update VAPID_CONTACT_EMAIL with your actual email"
+            fi
+        else
+            log_error "Failed to generate VAPID keys. Make sure web-push is installed."
+            log "Run: npm install -g web-push"
+            exit 1
+        fi
+    else
+        log_error "npx not found. Please install Node.js or run inside the container."
+        exit 1
+    fi
+}
+
 # Check prerequisites
 check_prerequisites() {
     log "Checking prerequisites..."
@@ -112,6 +174,14 @@ check_prerequisites() {
     if [ -z "$JWT_SECRET" ] || [ "$JWT_SECRET" = "REPLACE_WITH_SECURE_RANDOM_STRING" ]; then
         log_error "JWT_SECRET is not set or is using default value. Please update .env"
         exit 1
+    fi
+
+    # Check for VAPID keys (optional but recommended for push notifications)
+    if [ -z "$VAPID_PUBLIC_KEY" ] || [ -z "$VAPID_PRIVATE_KEY" ]; then
+        log_warning "VAPID keys not configured - push notifications will be disabled"
+        log_warning "Run './deploy.sh --generate-vapid' to generate keys"
+    else
+        log_success "VAPID keys configured for push notifications"
     fi
 
     log_success "Prerequisites check passed"
@@ -284,8 +354,68 @@ cleanup() {
     log_success "Cleanup completed"
 }
 
+# Show environment status
+show_env_status() {
+    echo ""
+    echo "=============================================="
+    echo "  Environment Status"
+    echo "=============================================="
+    echo ""
+
+    source "${SCRIPT_DIR}/.env"
+
+    log "Checking environment variables..."
+
+    # Required variables
+    if [ -n "$DATABASE_URL" ]; then
+        log_success "DATABASE_URL: configured"
+    else
+        log_error "DATABASE_URL: missing"
+    fi
+
+    if [ -n "$JWT_SECRET" ] && [ "$JWT_SECRET" != "REPLACE_WITH_SECURE_RANDOM_STRING" ]; then
+        log_success "JWT_SECRET: configured"
+    else
+        log_error "JWT_SECRET: missing or default"
+    fi
+
+    # Optional but recommended
+    if [ -n "$VAPID_PUBLIC_KEY" ] && [ -n "$VAPID_PRIVATE_KEY" ]; then
+        log_success "VAPID keys: configured (push notifications enabled)"
+    else
+        log_warning "VAPID keys: not configured (push notifications disabled)"
+    fi
+
+    if [ -n "$NETSAPIENS_API_KEY" ]; then
+        log_success "SMS (Netsapiens): configured"
+    else
+        log_warning "SMS (Netsapiens): not configured"
+    fi
+
+    if [ -n "$SMTP_HOST" ]; then
+        log_success "Email (SMTP): configured"
+    else
+        log_warning "Email (SMTP): not configured"
+    fi
+
+    echo ""
+    echo "=============================================="
+    echo ""
+}
+
 # Main deployment flow
 main() {
+    # Handle special commands first
+    if [ "$GENERATE_VAPID" = true ]; then
+        generate_vapid_keys
+        exit 0
+    fi
+
+    if [ "$CHECK_ENV_ONLY" = true ]; then
+        show_env_status
+        exit 0
+    fi
+
     echo ""
     echo "=============================================="
     echo "  Eli's Pizza Picker - Deployment"
@@ -309,6 +439,13 @@ main() {
     echo "=============================================="
     log_success "Deployment completed in ${duration} seconds"
     echo "=============================================="
+    echo ""
+
+    # Show helpful post-deployment info
+    log "Post-deployment checklist:"
+    echo "  - API Health: curl http://localhost:3001/api/health"
+    echo "  - API Docs:   http://localhost:3001/api/docs"
+    echo "  - Metrics:    curl http://localhost:3001/api/metrics"
     echo ""
 }
 

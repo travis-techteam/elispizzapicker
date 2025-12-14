@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Users, Calendar, Pizza, FileText, ChevronRight } from 'lucide-react';
+import { Users, Calendar, Pizza, FileText, ChevronRight, History } from 'lucide-react';
 import { api } from '../../services/api';
 import Card, { CardContent } from '../../components/ui/Card';
 import LoadingScreen from '../../components/ui/LoadingScreen';
@@ -32,14 +32,21 @@ export default function AdminDashboard() {
       label: 'Manage Users',
       description: `${users.length} users`,
       onClick: () => navigate('/admin/users'),
-      color: 'text-blue-500 bg-blue-50',
+      color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/30',
     },
     {
       icon: Calendar,
       label: 'Manage Events',
       description: `${events.length} events`,
       onClick: () => navigate('/admin/events'),
-      color: 'text-purple-500 bg-purple-50',
+      color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/30',
+    },
+    {
+      icon: History,
+      label: 'Event History',
+      description: 'Analytics & trends',
+      onClick: () => navigate('/admin/history'),
+      color: 'text-green-500 bg-green-50 dark:bg-green-900/30',
     },
   ];
 

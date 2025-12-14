@@ -16,6 +16,15 @@ import eventRoutes from './routes/events.js';
 import pizzaRoutes from './routes/pizzas.js';
 import voteRoutes from './routes/votes.js';
 import reportRoutes from './routes/reports.js';
+import metricsRoutes from './routes/metrics.js';
+import analyticsRoutes from './routes/analytics.js';
+import pushRoutes from './routes/push.js';
+
+// Import middleware
+import { sanitizeBody } from './middleware/sanitize.js';
+
+// Import Prisma for health check
+import prisma from './utils/prisma.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +56,9 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Sanitize request body to prevent XSS attacks
+app.use(sanitizeBody);
+
 // Rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -70,9 +82,39 @@ const generalLimiter = rateLimit({
 app.use('/api/auth', authLimiter);
 app.use('/api', generalLimiter);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'API is running' });
+// Health check with database connectivity test
+app.get('/api/health', async (_req, res) => {
+  const health: {
+    status: 'ok' | 'degraded';
+    timestamp: string;
+    uptime: number;
+    checks: {
+      database: 'ok' | 'error';
+    };
+    message?: string;
+  } = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    checks: {
+      database: 'ok',
+    },
+  };
+
+  try {
+    // Test database connectivity
+    await prisma.$queryRaw`SELECT 1`;
+  } catch (error) {
+    health.status = 'degraded';
+    health.checks.database = 'error';
+    logger.error({ err: error }, 'Health check: database connection failed');
+  }
+
+  const statusCode = health.status === 'ok' ? 200 : 503;
+  res.status(statusCode).json({
+    success: health.status === 'ok',
+    ...health,
+  });
 });
 
 // API Documentation
@@ -94,6 +136,9 @@ app.use('/api/events', eventRoutes);
 app.use('/api/events', pizzaRoutes);
 app.use('/api/events', voteRoutes);
 app.use('/api/events', reportRoutes);
+app.use('/api', metricsRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/push', pushRoutes);
 
 // Serve static frontend in production
 if (config.nodeEnv === 'production') {

@@ -7,6 +7,10 @@ import type {
   Vote,
   VoteInput,
   PizzaOrderReport,
+  EventHistory,
+  PizzaTrend,
+  ParticipationStats,
+  PaginatedResponse,
 } from '../types';
 
 const API_BASE = '/api';
@@ -308,6 +312,48 @@ class ApiService {
   // Reports
   async getReport(eventId: string): Promise<ApiResponse<PizzaOrderReport>> {
     return this.request(`/events/${eventId}/report`);
+  }
+
+  // Analytics
+  async getEventHistory(
+    limit = 20,
+    offset = 0
+  ): Promise<PaginatedResponse<EventHistory>> {
+    return this.request(`/analytics/history?limit=${limit}&offset=${offset}`) as Promise<PaginatedResponse<EventHistory>>;
+  }
+
+  async getPizzaTrends(limit = 10): Promise<ApiResponse<PizzaTrend[]>> {
+    return this.request(`/analytics/trends?limit=${limit}`);
+  }
+
+  async getParticipationStats(limit = 10): Promise<ApiResponse<ParticipationStats[]>> {
+    return this.request(`/analytics/participation?limit=${limit}`);
+  }
+
+  // Push notifications
+  async getVapidPublicKey(): Promise<ApiResponse<{ publicKey: string }>> {
+    return this.request('/push/vapid-public-key');
+  }
+
+  async getPushStatus(): Promise<ApiResponse<{ enabled: boolean; subscribed: boolean }>> {
+    return this.request('/push/status');
+  }
+
+  async subscribeToPush(subscription: {
+    endpoint: string;
+    keys: { p256dh: string; auth: string };
+    expirationTime?: number | null;
+  }): Promise<ApiResponse> {
+    return this.request('/push/subscribe', {
+      method: 'POST',
+      body: JSON.stringify(subscription),
+    });
+  }
+
+  async unsubscribeFromPush(): Promise<ApiResponse> {
+    return this.request('/push/subscribe', {
+      method: 'DELETE',
+    });
   }
 }
 

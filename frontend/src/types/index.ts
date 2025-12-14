@@ -115,3 +115,44 @@ export interface AuthTokens {
   refreshToken: string;
   user: User;
 }
+
+// Analytics types
+export interface EventHistory {
+  id: string;
+  name: string;
+  description: string | null;
+  deadline: string;
+  isActive: boolean;
+  createdAt: string;
+  voteCount: number;
+  participantCount: number;
+  pizzaCount: number;
+  topPizza: string | null;
+}
+
+export interface PizzaTrend {
+  name: string;
+  totalVotes: number;
+  firstChoiceVotes: number;
+  eventCount: number;
+}
+
+export interface ParticipationStats {
+  eventId: string;
+  eventName: string;
+  eventDate: string;
+  totalUsers: number;
+  participantCount: number;
+  participationRate: number;
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: T[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  };
+}

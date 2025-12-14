@@ -5,6 +5,7 @@ import { authenticate } from '../middleware/auth.js';
 import { AuthenticatedRequest } from '../types/index.js';
 import logger from '../utils/logger.js';
 import { getPaginationParams, getSkipTake, createPaginatedResponse } from '../utils/pagination.js';
+import { emitVoteUpdate, emitVoteSubmitted, emitVoteDeleted } from '../services/socket.service.js';
 
 const router = Router();
 
@@ -235,6 +236,14 @@ router.post('/:eventId/votes', authenticate, async (req: AuthenticatedRequest, r
         });
       });
 
+      // Emit socket events for vote update
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.userId },
+        select: { name: true },
+      });
+      emitVoteUpdate(req.params.eventId);
+      emitVoteSubmitted(req.params.eventId, user?.name || 'Someone');
+
       res.json({
         success: true,
         data: vote,
@@ -268,6 +277,14 @@ router.post('/:eventId/votes', authenticate, async (req: AuthenticatedRequest, r
           },
         },
       });
+
+      // Emit socket events for new vote
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.userId },
+        select: { name: true },
+      });
+      emitVoteUpdate(req.params.eventId);
+      emitVoteSubmitted(req.params.eventId, user?.name || 'Someone');
 
       res.status(201).json({
         success: true,
@@ -338,6 +355,10 @@ router.delete('/:eventId/votes/me', authenticate, async (req: AuthenticatedReque
     await prisma.vote.delete({
       where: { id: vote.id },
     });
+
+    // Emit socket events for vote deletion
+    emitVoteUpdate(req.params.eventId);
+    emitVoteDeleted(req.params.eventId);
 
     res.json({
       success: true,

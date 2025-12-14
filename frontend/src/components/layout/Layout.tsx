@@ -1,10 +1,14 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Home, Vote, BarChart3, Settings, LogOut } from 'lucide-react';
+import { Home, Vote, BarChart3, Settings, LogOut, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { cn } from '../../utils/cn';
+import OfflineIndicator from '../ui/OfflineIndicator';
+import NotificationBell from '../ui/NotificationBell';
 
 export default function Layout() {
   const { user, isAdmin, logout } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -12,8 +16,15 @@ export default function Layout() {
     navigate('/login');
   };
 
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Offline indicator */}
+      <OfflineIndicator />
+
       {/* Header */}
       <header className="bg-primary text-white safe-area-inset-top">
         <div className="max-w-lg mx-auto px-4 py-2 flex items-center justify-between">
@@ -21,7 +32,19 @@ export default function Layout() {
             <img src="/logo.png" alt="Eli's Pizza Picker" className="h-10 w-auto" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm opacity-90">{user?.name}</span>
+            <span className="text-sm opacity-90 hidden sm:inline">{user?.name}</span>
+            <NotificationBell />
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full hover:bg-white/20 transition-colors"
+              title={resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {resolvedTheme === 'dark' ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </button>
             <button
               onClick={handleLogout}
               className="p-2 rounded-full hover:bg-white/20 transition-colors"
