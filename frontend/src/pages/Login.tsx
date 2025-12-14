@@ -8,19 +8,48 @@ import Input from '../components/ui/Input';
 
 type Step = 'input' | 'verify';
 
+// Format phone as: 1 (xxx) xxx-xxxx
+function formatPhoneNumber(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+
+  if (digits.length === 0) return '';
+  if (digits.length <= 1) return digits;
+  if (digits.length <= 4) return `${digits[0]} (${digits.slice(1)}`;
+  if (digits.length <= 7) return `${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4)}`;
+  return `${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+}
+
+// Get raw digits from formatted phone
+function getPhoneDigits(value: string): string {
+  return value.replace(/\D/g, '');
+}
+
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const [step, setStep] = useState<Step>('input');
   const [phone, setPhone] = useState('');
+  const [formattedPhone, setFormattedPhone] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [warning, setWarning] = useState('');
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setFormattedPhone(formatted);
+    setPhone(getPhoneDigits(formatted));
+  };
+
+  const isPhoneValid = phone.length === 11;
+
   const handleRequestCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isPhoneValid) {
+      setError('Please enter a valid 11-digit phone number');
+      return;
+    }
     setError('');
     setWarning('');
     setIsLoading(true);
@@ -78,9 +107,9 @@ export default function Login() {
               <form onSubmit={handleRequestCode}>
                 <Input
                   type="tel"
-                  placeholder="Enter your phone number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="1 (555) 555-5555"
+                  value={formattedPhone}
+                  onChange={handlePhoneChange}
                   required
                   autoFocus
                 />
@@ -98,6 +127,7 @@ export default function Login() {
                   className="w-full mt-4"
                   size="lg"
                   isLoading={isLoading}
+                  disabled={!isPhoneValid}
                 >
                   Send Code
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -118,7 +148,7 @@ export default function Login() {
               </button>
 
               <p className="text-text-muted text-sm mb-4">
-                Enter the 6-digit code sent to <strong>{phone}</strong>
+                Enter the 6-digit code sent to <strong>{formattedPhone}</strong>
               </p>
 
               <form onSubmit={handleVerifyCode}>

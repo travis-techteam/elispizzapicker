@@ -11,6 +11,22 @@ import Modal from '../../components/ui/Modal';
 import LoadingScreen from '../../components/ui/LoadingScreen';
 import { useAuth } from '../../context/AuthContext';
 
+// Format phone as: 1 (xxx) xxx-xxxx
+function formatPhoneNumber(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+
+  if (digits.length === 0) return '';
+  if (digits.length <= 1) return digits;
+  if (digits.length <= 4) return `${digits[0]} (${digits.slice(1)}`;
+  if (digits.length <= 7) return `${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4)}`;
+  return `${digits[0]} (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+}
+
+// Get raw digits from formatted phone
+function getPhoneDigits(value: string): string {
+  return value.replace(/\D/g, '');
+}
+
 export default function AdminUsers() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -25,7 +41,16 @@ export default function AdminUsers() {
     role: 'USER' as 'ADMIN' | 'USER',
     sendInvite: true,
   });
+  const [formattedPhone, setFormattedPhone] = useState('');
   const [error, setError] = useState('');
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setFormattedPhone(formatted);
+    setFormData({ ...formData, phone: getPhoneDigits(formatted) });
+  };
+
+  const isPhoneValid = formData.phone.length === 11;
 
   const { data: usersResponse, isLoading } = useQuery({
     queryKey: ['users'],
@@ -65,19 +90,22 @@ export default function AdminUsers() {
   const openCreateModal = () => {
     setEditingUser(null);
     setFormData({ name: '', phone: '', email: '', role: 'USER', sendInvite: true });
+    setFormattedPhone('');
     setError('');
     setIsModalOpen(true);
   };
 
   const openEditModal = (user: User) => {
     setEditingUser(user);
+    const phoneDigits = getPhoneDigits(user.phone);
     setFormData({
       name: user.name,
-      phone: user.phone,
+      phone: phoneDigits,
       email: user.email || '',
       role: user.role,
       sendInvite: false,
     });
+    setFormattedPhone(formatPhoneNumber(phoneDigits));
     setError('');
     setIsModalOpen(true);
   };
@@ -91,6 +119,11 @@ export default function AdminUsers() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!isPhoneValid) {
+      setError('Please enter a valid 11-digit phone number');
+      return;
+    }
 
     if (editingUser) {
       const result = await updateMutation.mutateAsync({
@@ -200,16 +233,17 @@ export default function AdminUsers() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Name"
+            label="Name *"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
           />
           <Input
-            label="Phone"
+            label="Phone *"
             type="tel"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            placeholder="1 (555) 555-5555"
+            value={formattedPhone}
+            onChange={handlePhoneChange}
             required
           />
           <Input
@@ -251,6 +285,7 @@ export default function AdminUsers() {
               type="submit"
               className="flex-1"
               isLoading={createMutation.isPending || updateMutation.isPending}
+              disabled={!formData.name || !isPhoneValid}
             >
               {editingUser ? 'Save' : 'Add User'}
             </Button>
