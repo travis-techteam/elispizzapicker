@@ -96,7 +96,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="Eli's Pizza Picker" className="h-32 w-auto mx-auto mb-2" />
+          <img src="/logo.png" alt="Eli's Pizza Picker" className="h-48 w-auto mx-auto mb-2" />
           <p className="text-text-muted mt-2">Vote on pizza for group dinners</p>
         </div>
 
@@ -188,7 +188,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-text-muted text-sm mt-6">
-          Don't have an account? Contact an admin for an invite.
+          Don't have an account? Call us at +1 (816) 383-8695 for more information.
         </p>
       </div>
     </div>
