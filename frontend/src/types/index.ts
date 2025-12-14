@@ -6,6 +6,7 @@ export interface User {
   phone: string;
   email: string | null;
   role: Role;
+  lastLoginAt: string | null;
   createdAt: string;
 }
 

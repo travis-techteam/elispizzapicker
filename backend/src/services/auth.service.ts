@@ -196,6 +196,12 @@ export class AuthService {
       data: { used: true },
     });
 
+    // Update last login time
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     // Generate JWTs
     const payload: JwtPayload = { userId: user.id, role: user.role };
     const accessToken = this.generateAccessToken(payload);
@@ -236,6 +242,12 @@ export class AuthService {
         await prisma.authToken.update({
           where: { id: authToken.id },
           data: { used: true },
+        });
+
+        // Update last login time
+        await prisma.user.update({
+          where: { id: authToken.user.id },
+          data: { lastLoginAt: new Date() },
         });
 
         // Generate JWTs

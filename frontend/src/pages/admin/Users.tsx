@@ -203,6 +203,11 @@ export default function AdminUsers() {
                 )}
               </div>
               <p className="text-sm text-text-muted truncate">{user.phone}</p>
+              <p className="text-xs text-text-muted">
+                Last login: {user.lastLoginAt
+                  ? new Date(user.lastLoginAt).toLocaleDateString() + ' ' + new Date(user.lastLoginAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : 'Never'}
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <button
