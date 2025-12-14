@@ -9,6 +9,7 @@ import { api } from '../services/api';
 import type { PizzaOption, VoteInput } from '../types';
 import Card, { CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import Modal from '../components/ui/Modal';
 import LoadingScreen from '../components/ui/LoadingScreen';
 import CountdownTimer from '../components/ui/CountdownTimer';
 import Toast from '../components/ui/Toast';
@@ -32,6 +33,7 @@ export default function Vote() {
   const [error, setError] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' } | null>(null);
   const [liveVoteCount, setLiveVoteCount] = useState<number | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Fetch active event or specific event
   const { data: eventResponse, isLoading: eventLoading } = useQuery({
@@ -103,12 +105,17 @@ export default function Vote() {
       queryClient.invalidateQueries({ queryKey: ['report', event?.id] });
       queryClient.invalidateQueries({ queryKey: ['event', event?.id] });
       queryClient.invalidateQueries({ queryKey: ['activeEvent'] });
-      navigate('/');
+      setShowConfirmation(true);
     },
     onError: (err: Error) => {
       setError(err.message || 'Failed to submit vote');
     },
   });
+
+  const handleConfirmationClose = () => {
+    setShowConfirmation(false);
+    navigate('/');
+  };
 
   // useCallback must be called before any conditional returns (Rules of Hooks)
   const handleDeadlineExpired = useCallback(() => {
@@ -361,6 +368,24 @@ export default function Vote() {
       >
         {myVoteResponse?.data ? 'Update Vote' : 'Submit Vote'}
       </Button>
+
+      {/* Vote Confirmation Modal */}
+      <Modal isOpen={showConfirmation} onClose={handleConfirmationClose}>
+        <div className="text-center py-4">
+          <img
+            src="/logo.png"
+            alt="Eli's Pizza Picker"
+            className="h-48 w-auto mx-auto mb-6"
+          />
+          <h2 className="text-xl font-bold text-text mb-2">Vote Recorded</h2>
+          <p className="text-text-muted mb-6">
+            Eli thanks you for your contribution!
+          </p>
+          <Button onClick={handleConfirmationClose} className="w-full" size="lg">
+            Back to Home
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
