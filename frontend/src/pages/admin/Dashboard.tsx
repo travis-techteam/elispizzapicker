@@ -59,7 +59,7 @@ export default function AdminDashboard() {
 
       {/* Active Event Summary */}
       {activeEvent && (
-        <Card className="bg-gradient-to-br from-primary-50 to-accent-50 border-primary-200">
+        <Card className="bg-gradient-to-br from-primary-50 to-accent-50 dark:from-primary-900/40 dark:to-accent-900/40 border-primary-200 dark:border-primary-800">
           <CardContent>
             <div className="flex items-center justify-between mb-3">
               <span className="badge-primary">Active Event</span>

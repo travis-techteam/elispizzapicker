@@ -44,7 +44,7 @@ export default function Home() {
 
       {/* Active Event Card */}
       {event ? (
-        <Card className="bg-gradient-to-br from-primary-50 to-accent-50 border-primary-200">
+        <Card className="bg-gradient-to-br from-primary-50 to-accent-50 dark:from-primary-900/40 dark:to-accent-900/40 border-primary-200 dark:border-primary-800">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
