@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Pizza, Users, AlertTriangle, Printer, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Pizza, Users, AlertTriangle, Printer, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '../../services/api';
 import Card, { CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
@@ -59,6 +59,10 @@ export default function AdminReport() {
           <h1 className="text-2xl font-bold text-text">Order Report</h1>
           <p className="text-text-muted">{report.event.name}</p>
         </div>
+        <Button onClick={() => navigate(`/admin/events/${eventId}/find-pizza`)} variant="outline" size="sm">
+          <MapPin className="w-4 h-4 mr-1" />
+          Find Pizza Places
+        </Button>
         <Button onClick={handlePrint} variant="outline" size="sm">
           <Printer className="w-4 h-4 mr-1" />
           Print

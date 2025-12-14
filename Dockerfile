@@ -1,6 +1,8 @@
 # Build stage for frontend
 FROM node:20-alpine AS frontend-build
 WORKDIR /app/frontend
+ARG VITE_GOOGLE_MAPS_API_KEY
+ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ ./

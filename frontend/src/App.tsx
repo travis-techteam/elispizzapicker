@@ -11,6 +11,7 @@ import AdminUsers from './pages/admin/Users';
 import AdminEvents from './pages/admin/Events';
 import AdminPizzaOptions from './pages/admin/PizzaOptions';
 import AdminReport from './pages/admin/Report';
+import AdminFindPizzaPlaces from './pages/admin/FindPizzaPlaces';
 import NotFound from './pages/NotFound';
 import LoadingScreen from './components/ui/LoadingScreen';
 
@@ -123,6 +124,14 @@ export default function App() {
           element={
             <AdminRoute>
               <AdminReport />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="admin/events/:eventId/find-pizza"
+          element={
+            <AdminRoute>
+              <AdminFindPizzaPlaces />
             </AdminRoute>
           }
         />
