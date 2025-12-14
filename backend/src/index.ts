@@ -1,12 +1,16 @@
 import app from './app.js';
 import { config } from './config/index.js';
 import prisma from './utils/prisma.js';
+import { schedulerService } from './services/scheduler.service.js';
 
 const start = async () => {
   try {
     // Test database connection
     await prisma.$connect();
     console.log('Connected to database');
+
+    // Start the reminder scheduler
+    schedulerService.start();
 
     // Start server
     app.listen(config.port, () => {
@@ -22,12 +26,14 @@ const start = async () => {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('Shutting down gracefully...');
+  schedulerService.stop();
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('Shutting down gracefully...');
+  schedulerService.stop();
   await prisma.$disconnect();
   process.exit(0);
 });

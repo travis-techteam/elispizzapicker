@@ -17,6 +17,8 @@ export interface Event {
   deadline: string;
   isActive: boolean;
   createdById: string;
+  reminderMinutesBefore?: number | null;
+  reminderSentAt?: string | null;
   createdAt: string;
   updatedAt: string;
   createdBy?: { name: string };

@@ -215,6 +215,7 @@ class ApiService {
     description?: string;
     deadline: string;
     isActive?: boolean;
+    reminderMinutesBefore?: number | null;
   }): Promise<ApiResponse<Event>> {
     return this.request('/events', {
       method: 'POST',
@@ -229,6 +230,7 @@ class ApiService {
       description?: string | null;
       deadline?: string;
       isActive?: boolean;
+      reminderMinutesBefore?: number | null;
     }
   ): Promise<ApiResponse<Event>> {
     return this.request(`/events/${id}`, {

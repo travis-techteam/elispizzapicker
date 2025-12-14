@@ -21,6 +21,7 @@ export default function AdminEvents() {
     description: '',
     deadline: '',
     isActive: false,
+    reminderMinutesBefore: null as number | null,
   });
   const [error, setError] = useState('');
 
@@ -66,7 +67,7 @@ export default function AdminEvents() {
     tomorrow.setHours(18, 0, 0, 0);
     const deadlineStr = tomorrow.toISOString().slice(0, 16);
 
-    setFormData({ name: '', description: '', deadline: deadlineStr, isActive: false });
+    setFormData({ name: '', description: '', deadline: deadlineStr, isActive: false, reminderMinutesBefore: null });
     setError('');
     setIsModalOpen(true);
   };
@@ -78,6 +79,7 @@ export default function AdminEvents() {
       description: event.description || '',
       deadline: new Date(event.deadline).toISOString().slice(0, 16),
       isActive: event.isActive,
+      reminderMinutesBefore: event.reminderMinutesBefore ?? null,
     });
     setError('');
     setIsModalOpen(true);
@@ -107,6 +109,7 @@ export default function AdminEvents() {
           description: formData.description || null,
           deadline: deadlineDate.toISOString(),
           isActive: formData.isActive,
+          reminderMinutesBefore: formData.reminderMinutesBefore,
         },
       });
       if (!result.success) {
@@ -118,6 +121,7 @@ export default function AdminEvents() {
         description: formData.description || undefined,
         deadline: deadlineDate.toISOString(),
         isActive: formData.isActive,
+        reminderMinutesBefore: formData.reminderMinutesBefore,
       });
       if (!result.success) {
         setError(result.error || 'Failed to create event');
@@ -274,6 +278,33 @@ export default function AdminEvents() {
             />
             <span className="text-sm text-text">Set as active event</span>
           </label>
+
+          <div>
+            <label className="block text-sm font-medium text-text mb-1">
+              SMS Reminder (optional)
+            </label>
+            <select
+              value={formData.reminderMinutesBefore ?? ''}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  reminderMinutesBefore: e.target.value ? parseInt(e.target.value) : null,
+                })
+              }
+              className="input"
+            >
+              <option value="">No reminder</option>
+              <option value="30">30 minutes before deadline</option>
+              <option value="60">1 hour before deadline</option>
+              <option value="120">2 hours before deadline</option>
+              <option value="240">4 hours before deadline</option>
+              <option value="480">8 hours before deadline</option>
+              <option value="1440">24 hours before deadline</option>
+            </select>
+            <p className="text-xs text-text-muted mt-1">
+              Sends SMS reminders to users who haven't voted yet
+            </p>
+          </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
 

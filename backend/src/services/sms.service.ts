@@ -117,6 +117,47 @@ export class SmsService {
       return { success: false, error: 'Failed to send SMS' };
     }
   }
+
+  async sendMessage(phoneNumber: string, message: string): Promise<SendSmsResult> {
+    if (!this.apiUrl || !this.apiKey) {
+      console.warn('Netsapiens API not configured, SMS not sent');
+      return { success: false, error: 'SMS service not configured' };
+    }
+
+    try {
+      const messageSession = this.generateMessageSession();
+      const formattedDestination = this.formatPhoneNumber(phoneNumber);
+      const formattedFrom = this.formatPhoneNumber(this.fromNumber);
+
+      const response = await fetch(
+        `${this.apiUrl}/domains/${this.domain}/users/${this.user}/messagesessions/${messageSession}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'sms',
+            message: message,
+            destination: formattedDestination,
+            'from-number': formattedFrom,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Netsapiens SMS error:', errorText);
+        return { success: false, error: 'Failed to send SMS' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('SMS send error:', error);
+      return { success: false, error: 'Failed to send SMS' };
+    }
+  }
 }
 
 export const smsService = new SmsService();

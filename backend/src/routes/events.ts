@@ -4,6 +4,7 @@ import prisma from '../utils/prisma.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
 import { AuthenticatedRequest } from '../types/index.js';
+import { reminderService } from '../services/reminder.service.js';
 
 const router = Router();
 
@@ -13,6 +14,7 @@ const createEventSchema = z.object({
   description: z.string().max(500).optional(),
   deadline: z.string().datetime(),
   isActive: z.boolean().default(false),
+  reminderMinutesBefore: z.number().int().min(15).max(1440).optional().nullable(),
 });
 
 const updateEventSchema = z.object({
@@ -20,6 +22,7 @@ const updateEventSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   deadline: z.string().datetime().optional(),
   isActive: z.boolean().optional(),
+  reminderMinutesBefore: z.number().int().min(15).max(1440).optional().nullable(),
 });
 
 // Get active event (any authenticated user)
@@ -148,6 +151,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, r
         description: data.description,
         deadline: new Date(data.deadline),
         isActive: data.isActive,
+        reminderMinutesBefore: data.reminderMinutesBefore,
         createdById: req.user!.userId,
       },
       include: {
@@ -208,12 +212,25 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest,
       });
     }
 
+    // Build update data
+    const updateData: Record<string, unknown> = {
+      ...data,
+      deadline: data.deadline ? new Date(data.deadline) : undefined,
+    };
+
+    // Reset reminderSentAt if deadline changes to allow new reminder
+    if (data.deadline && new Date(data.deadline).getTime() !== existing.deadline.getTime()) {
+      updateData.reminderSentAt = null;
+    }
+
+    // Also reset reminderSentAt if reminder timing changes
+    if (data.reminderMinutesBefore !== undefined && data.reminderMinutesBefore !== existing.reminderMinutesBefore) {
+      updateData.reminderSentAt = null;
+    }
+
     const event = await prisma.event.update({
       where: { id: req.params.id },
-      data: {
-        ...data,
-        deadline: data.deadline ? new Date(data.deadline) : undefined,
-      },
+      data: updateData,
       include: {
         createdBy: {
           select: { name: true },
@@ -275,6 +292,56 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthenticatedReque
     res.status(500).json({
       success: false,
       error: 'Failed to delete event',
+    });
+  }
+});
+
+// Send reminders manually (Admin only)
+router.post('/:id/send-reminders', authenticate, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const event = await prisma.event.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!event) {
+      res.status(404).json({
+        success: false,
+        error: 'Event not found',
+      });
+      return;
+    }
+
+    if (new Date() > event.deadline) {
+      res.status(400).json({
+        success: false,
+        error: 'Cannot send reminders for a past event',
+      });
+      return;
+    }
+
+    // Reset reminderSentAt to allow re-sending
+    await prisma.event.update({
+      where: { id: req.params.id },
+      data: { reminderSentAt: null },
+    });
+
+    // Send reminders
+    const result = await reminderService.sendRemindersForEvent(
+      event.id,
+      event.name,
+      event.deadline
+    );
+
+    res.json({
+      success: true,
+      message: `Sent ${result.sent} reminders (${result.failed} failed)`,
+      data: result,
+    });
+  } catch (error) {
+    console.error('Send reminders error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send reminders',
     });
   }
 });

@@ -1,14 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Users, Pizza, Vote, ChevronRight, Clock } from 'lucide-react';
+import { Calendar, Users, Pizza, Vote, ChevronRight } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Card, { CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingScreen from '../components/ui/LoadingScreen';
+import CountdownTimer from '../components/ui/CountdownTimer';
 
 export default function Home() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, isAdmin } = useAuth();
 
   const { data: activeEventResponse, isLoading } = useQuery({
@@ -61,13 +63,11 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4 text-sm text-text-muted mb-4">
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>
-                  {isDeadlinePassed ? 'Ended ' : 'Ends '}
-                  {formatDeadline(deadline!)}
-                </span>
-              </div>
+              <CountdownTimer
+                deadline={event.deadline}
+                onExpire={() => queryClient.invalidateQueries({ queryKey: ['activeEvent'] })}
+                size="sm"
+              />
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
                 <span>{event._count?.votes || 0} votes</span>
@@ -167,22 +167,4 @@ export default function Home() {
       )}
     </div>
   );
-}
-
-function formatDeadline(date: Date): string {
-  const now = new Date();
-  const diff = date.getTime() - now.getTime();
-  const absDiff = Math.abs(diff);
-
-  const hours = Math.floor(absDiff / (1000 * 60 * 60));
-  const days = Math.floor(hours / 24);
-
-  if (days > 1) {
-    return `${days} days ${diff > 0 ? 'left' : 'ago'}`;
-  } else if (hours > 1) {
-    return `${hours} hours ${diff > 0 ? 'left' : 'ago'}`;
-  } else {
-    const minutes = Math.floor(absDiff / (1000 * 60));
-    return `${minutes} minutes ${diff > 0 ? 'left' : 'ago'}`;
-  }
 }

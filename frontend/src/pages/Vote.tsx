@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
@@ -10,6 +10,7 @@ import type { PizzaOption, VoteInput } from '../types';
 import Card, { CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingScreen from '../components/ui/LoadingScreen';
+import CountdownTimer from '../components/ui/CountdownTimer';
 import { cn } from '../utils/cn';
 
 interface SelectedPizza {
@@ -89,6 +90,10 @@ export default function Vote() {
       </div>
     );
   }
+
+  const handleDeadlineExpired = useCallback(() => {
+    navigate(`/results/${event.id}`);
+  }, [navigate, event.id]);
 
   const deadline = new Date(event.deadline);
   const isDeadlinePassed = deadline < new Date();
@@ -180,10 +185,11 @@ export default function Vote() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-text">{event.name}</h1>
-        <p className="text-text-muted flex items-center gap-1 mt-1">
-          <Clock className="w-4 h-4" />
-          Deadline: {deadline.toLocaleDateString()} {deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </p>
+        <CountdownTimer
+          deadline={event.deadline}
+          onExpire={handleDeadlineExpired}
+          className="mt-1"
+        />
       </div>
 
       {/* Slice Count */}
