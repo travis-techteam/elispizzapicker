@@ -38,15 +38,10 @@ export interface VoteInput {
 
 // Report types
 export interface PizzaOrderRecommendation {
-  fullPizzas: {
+  pizzaOrders: {
     name: string;
     quantity: number;
-    slices: number;
-  }[];
-  halfPizzas: {
-    half1: string;
-    half2: string;
-    quantity: number;
+    slicesRequested: number;
   }[];
   totalPizzas: number;
   totalSlices: number;

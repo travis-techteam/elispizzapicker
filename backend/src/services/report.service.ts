@@ -2,7 +2,7 @@ import prisma from '../utils/prisma.js';
 import { PizzaOrderRecommendation } from '../types/index.js';
 
 const SLICES_PER_PIZZA = 8;
-const MIN_SLICES_FOR_HALF = 4;
+const MIN_SLICES_TO_ROUND_UP = 4; // 4+ slices rounds up to next pizza
 
 interface VoterAllocation {
   oderId: string;  // kept for internal tracking (vote's userId)
@@ -18,13 +18,6 @@ interface PizzaDemand {
   toppingCount: number;
   totalSlices: number;
   voterCount: number;
-}
-
-interface HalfPizzaCandidate {
-  pizzaOptionId: string;
-  name: string;
-  toppingCount: number;
-  remainingSlices: number;
 }
 
 export class ReportService {
@@ -92,10 +85,10 @@ export class ReportService {
         }
       });
 
-      // Find options that don't have enough demand (< MIN_SLICES_FOR_HALF)
+      // Find options that don't have enough demand (< MIN_SLICES_TO_ROUND_UP)
       const unviableOptions = new Set<string>();
       demandMap.forEach((slices, pizzaId) => {
-        if (slices > 0 && slices < MIN_SLICES_FOR_HALF) {
+        if (slices > 0 && slices < MIN_SLICES_TO_ROUND_UP) {
           unviableOptions.add(pizzaId);
         }
       });
@@ -155,65 +148,30 @@ export class ReportService {
     // Sort by total slices (highest first)
     demands.sort((a, b) => b.totalSlices - a.totalSlices);
 
-    // Calculate full pizzas and remainders
-    const fullPizzas: { name: string; quantity: number; slices: number }[] = [];
-    const halfCandidates: HalfPizzaCandidate[] = [];
+    // Calculate pizzas using rounding: 4+ slices remainder rounds up, 0-3 rounds down
+    const pizzaOrders: { name: string; quantity: number; slicesRequested: number }[] = [];
+    const droppedOptions: string[] = [];
 
     demands.forEach((demand) => {
       const fullCount = Math.floor(demand.totalSlices / SLICES_PER_PIZZA);
       const remainder = demand.totalSlices % SLICES_PER_PIZZA;
 
-      if (fullCount > 0) {
-        fullPizzas.push({
+      // Round up if remainder is 4+ slices (50% or more of a pizza)
+      const roundUp = remainder >= MIN_SLICES_TO_ROUND_UP ? 1 : 0;
+      const totalPizzas = fullCount + roundUp;
+
+      if (totalPizzas > 0) {
+        pizzaOrders.push({
           name: demand.name,
-          quantity: fullCount,
-          slices: fullCount * SLICES_PER_PIZZA,
+          quantity: totalPizzas,
+          slicesRequested: demand.totalSlices,
         });
       }
 
-      // Only consider remainders of 4+ slices as viable half-pizza candidates
-      if (remainder >= MIN_SLICES_FOR_HALF) {
-        halfCandidates.push({
-          pizzaOptionId: demand.pizzaOptionId,
-          name: demand.name,
-          toppingCount: demand.toppingCount,
-          remainingSlices: remainder,
-        });
-      }
-    });
-
-    // Match half pizzas by topping count
-    const halfPizzas: { half1: string; half2: string; quantity: number }[] = [];
-    const droppedOptions: string[] = [];
-
-    // Group candidates by topping count
-    const byToppingCount = new Map<number, HalfPizzaCandidate[]>();
-    halfCandidates.forEach((candidate) => {
-      const group = byToppingCount.get(candidate.toppingCount) || [];
-      group.push(candidate);
-      byToppingCount.set(candidate.toppingCount, group);
-    });
-
-    // Match pairs within each topping count group
-    byToppingCount.forEach((group) => {
-      // Sort by remaining slices (highest first)
-      group.sort((a, b) => b.remainingSlices - a.remainingSlices);
-
-      for (let i = 0; i < group.length - 1; i += 2) {
-        if (i + 1 < group.length) {
-          halfPizzas.push({
-            half1: group[i].name,
-            half2: group[i + 1].name,
-            quantity: 1,
-          });
-        }
-      }
-
-      // Handle odd one out
-      if (group.length % 2 === 1) {
-        const leftover = group[group.length - 1];
+      // Track dropped slices (remainder that didn't round up)
+      if (remainder > 0 && remainder < MIN_SLICES_TO_ROUND_UP) {
         droppedOptions.push(
-          `${leftover.name} (${leftover.remainingSlices} slices, no compatible half-pizza match)`
+          `${demand.name}: ${remainder} slices dropped (below ${MIN_SLICES_TO_ROUND_UP}-slice minimum for rounding)`
         );
       }
     });
@@ -244,14 +202,11 @@ export class ReportService {
     });
 
     // Calculate totals
-    const totalFullPizzas = fullPizzas.reduce((sum, p) => sum + p.quantity, 0);
-    const totalHalfPizzas = halfPizzas.length;
-    const totalPizzas = totalFullPizzas + totalHalfPizzas;
+    const totalPizzas = pizzaOrders.reduce((sum, p) => sum + p.quantity, 0);
     const totalSlices = totalPizzas * SLICES_PER_PIZZA;
 
     return {
-      fullPizzas,
-      halfPizzas,
+      pizzaOrders,
       totalPizzas,
       totalSlices,
       droppedOptions,

@@ -75,15 +75,10 @@ export interface PizzaOrderReport {
     name: string;
     deadline: string;
   };
-  fullPizzas: {
+  pizzaOrders: {
     name: string;
     quantity: number;
-    slices: number;
-  }[];
-  halfPizzas: {
-    half1: string;
-    half2: string;
-    quantity: number;
+    slicesRequested: number;
   }[];
   totalPizzas: number;
   totalSlices: number;
@@ -96,6 +91,7 @@ export interface PizzaOrderReport {
       pizzaName: string;
       priority: number;
     }[];
+    allocatedTo: string;
   }[];
   summary: {
     totalVoters: number;

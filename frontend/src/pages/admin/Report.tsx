@@ -99,56 +99,25 @@ export default function AdminReport() {
           <CardTitle>Order Summary</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Full Pizzas */}
-          {report.fullPizzas.length > 0 && (
-            <div>
-              <h4 className="font-medium text-text mb-3">Full Pizzas</h4>
-              <div className="space-y-2">
-                {report.fullPizzas.map((pizza, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
-                        {pizza.quantity}
-                      </span>
-                      <span className="font-medium">{pizza.name}</span>
-                    </div>
-                    <span className="text-sm text-text-muted">{pizza.slices} slices</span>
+          {/* Pizza Orders */}
+          {report.pizzaOrders.length > 0 ? (
+            <div className="space-y-2">
+              {report.pizzaOrders.map((pizza, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      {pizza.quantity}
+                    </span>
+                    <span className="font-medium">{pizza.name}</span>
                   </div>
-                ))}
-              </div>
+                  <span className="text-sm text-text-muted">{pizza.slicesRequested} slices requested</span>
+                </div>
+              ))}
             </div>
-          )}
-
-          {/* Half Pizzas */}
-          {report.halfPizzas.length > 0 && (
-            <div>
-              <h4 className="font-medium text-text mb-3">Half & Half Pizzas</h4>
-              <div className="space-y-2">
-                {report.halfPizzas.map((pizza, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between py-2 px-3 bg-gradient-to-r from-secondary-50 to-accent-50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 bg-secondary text-white rounded-full flex items-center justify-center font-bold text-sm">
-                        {pizza.quantity}
-                      </span>
-                      <span className="font-medium">
-                        {pizza.half1} / {pizza.half2}
-                      </span>
-                    </div>
-                    <span className="text-xs text-text-muted">Half & Half</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* No pizzas case */}
-          {report.fullPizzas.length === 0 && report.halfPizzas.length === 0 && (
+          ) : (
             <p className="text-center text-text-muted py-4">
               Not enough votes to calculate an order
             </p>
@@ -208,14 +177,19 @@ export default function AdminReport() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium">{voter.userName}</span>
-                    <span className="text-sm text-text-muted">{voter.sliceCount} slices</span>
+                    <div className="text-right">
+                      <span className="text-sm text-text-muted">{voter.sliceCount} slices</span>
+                      <span className="text-xs text-primary ml-2">→ {voter.allocatedTo}</span>
+                    </div>
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     {voter.choices.map((choice, index) => (
                       <span
                         key={index}
                         className={`text-xs px-2 py-1 rounded-full ${
-                          choice.priority === 1
+                          choice.pizzaName === voter.allocatedTo
+                            ? 'bg-green-100 text-green-800 ring-1 ring-green-500'
+                            : choice.priority === 1
                             ? 'bg-accent-100 text-accent-800'
                             : choice.priority === 2
                             ? 'bg-secondary-100 text-secondary-800'
