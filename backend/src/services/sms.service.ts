@@ -20,6 +20,20 @@ export class SmsService {
     this.fromNumber = config.netsapiens.fromNumber;
   }
 
+  private generateMessageSession(): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+    let result = '';
+    for (let i = 0; i < 32; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  private formatPhoneNumber(phone: string): string {
+    // Remove all non-digit characters to get format: 15551234567
+    return phone.replace(/\D/g, '');
+  }
+
   async sendVerificationCode(phoneNumber: string, code: string): Promise<SendSmsResult> {
     if (!this.apiUrl || !this.apiKey) {
       console.warn('Netsapiens API not configured, SMS not sent');
@@ -27,13 +41,13 @@ export class SmsService {
     }
 
     try {
-      // Format the message
       const message = `Your Eli's Pizza Picker verification code is: ${code}. This code expires in 10 minutes.`;
+      const messageSession = this.generateMessageSession();
+      const formattedDestination = this.formatPhoneNumber(phoneNumber);
+      const formattedFrom = this.formatPhoneNumber(this.fromNumber);
 
-      // Netsapiens API call
-      // Endpoint: /domains/{domain}/users/{user}/messages
       const response = await fetch(
-        `${this.apiUrl}/domains/${this.domain}/users/${this.user}/messages`,
+        `${this.apiUrl}/domains/${this.domain}/users/${this.user}/messagesessions/${messageSession}/messages`,
         {
           method: 'POST',
           headers: {
@@ -41,10 +55,10 @@ export class SmsService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            destination: phoneNumber,
-            message: message,
-            from_num: this.fromNumber,
             type: 'sms',
+            message: message,
+            destination: formattedDestination,
+            'from-number': formattedFrom,
           }),
         }
       );
@@ -70,9 +84,12 @@ export class SmsService {
 
     try {
       const message = `${inviterName} has invited you to Eli's Pizza Picker! Visit ${config.appUrl} to vote on pizza for the next dinner.`;
+      const messageSession = this.generateMessageSession();
+      const formattedDestination = this.formatPhoneNumber(phoneNumber);
+      const formattedFrom = this.formatPhoneNumber(this.fromNumber);
 
       const response = await fetch(
-        `${this.apiUrl}/domains/${this.domain}/users/${this.user}/messages`,
+        `${this.apiUrl}/domains/${this.domain}/users/${this.user}/messagesessions/${messageSession}/messages`,
         {
           method: 'POST',
           headers: {
@@ -80,10 +97,10 @@ export class SmsService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            destination: phoneNumber,
-            message: message,
-            from_num: this.fromNumber,
             type: 'sms',
+            message: message,
+            destination: formattedDestination,
+            'from-number': formattedFrom,
           }),
         }
       );
