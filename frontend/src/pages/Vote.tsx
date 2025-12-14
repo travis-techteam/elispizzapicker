@@ -162,8 +162,8 @@ export default function Vote() {
       return;
     }
 
-    if (sliceCount < 1 || sliceCount > 5) {
-      setError('Slice count must be between 1 and 5');
+    if (sliceCount < 1 || sliceCount > 4) {
+      setError('Slice count must be between 1 and 4');
       return;
     }
 
@@ -202,9 +202,9 @@ export default function Vote() {
             </button>
             <span className="text-4xl font-bold text-primary w-16 text-center">{sliceCount}</span>
             <button
-              onClick={() => setSliceCount(Math.min(5, sliceCount + 1))}
+              onClick={() => setSliceCount(Math.min(4, sliceCount + 1))}
               className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
-              disabled={sliceCount >= 5}
+              disabled={sliceCount >= 4}
             >
               <Plus className="w-5 h-5" />
             </button>
