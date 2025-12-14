@@ -1,22 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Phone, Mail, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 
-type AuthMethod = 'phone' | 'email';
 type Step = 'input' | 'verify';
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [method, setMethod] = useState<AuthMethod>('phone');
   const [step, setStep] = useState<Step>('input');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,26 +26,14 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      if (method === 'phone') {
-        const response = await api.requestSmsCode(phone);
-        if (response.success) {
-          setStep('verify');
-          if (response.warning) {
-            setWarning(response.warning);
-          }
-        } else {
-          setError(response.error || 'Failed to send code');
+      const response = await api.requestSmsCode(phone);
+      if (response.success) {
+        setStep('verify');
+        if (response.warning) {
+          setWarning(response.warning);
         }
       } else {
-        const response = await api.requestMagicLink(email);
-        if (response.success) {
-          setWarning('Check your email for the login link!');
-          if (response.warning) {
-            setWarning(response.warning);
-          }
-        } else {
-          setError(response.error || 'Failed to send magic link');
-        }
+        setError(response.error || 'Failed to send code');
       }
     } catch {
       setError('Something went wrong. Please try again.');
@@ -90,52 +75,15 @@ export default function Login() {
         <div className="bg-surface rounded-2xl shadow-sm border border-gray-100 p-6">
           {step === 'input' ? (
             <>
-              {/* Method toggle */}
-              <div className="flex rounded-lg bg-gray-100 p-1 mb-6">
-                <button
-                  onClick={() => setMethod('phone')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                    method === 'phone'
-                      ? 'bg-white text-text shadow-sm'
-                      : 'text-text-muted hover:text-text'
-                  }`}
-                >
-                  <Phone className="w-4 h-4" />
-                  Phone
-                </button>
-                <button
-                  onClick={() => setMethod('email')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                    method === 'email'
-                      ? 'bg-white text-text shadow-sm'
-                      : 'text-text-muted hover:text-text'
-                  }`}
-                >
-                  <Mail className="w-4 h-4" />
-                  Email
-                </button>
-              </div>
-
               <form onSubmit={handleRequestCode}>
-                {method === 'phone' ? (
-                  <Input
-                    type="tel"
-                    placeholder="Enter your phone number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                    autoFocus
-                  />
-                ) : (
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoFocus
-                  />
-                )}
+                <Input
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  autoFocus
+                />
 
                 {error && (
                   <p className="mt-2 text-sm text-red-500">{error}</p>
@@ -151,7 +99,7 @@ export default function Login() {
                   size="lg"
                   isLoading={isLoading}
                 >
-                  {method === 'phone' ? 'Send Code' : 'Send Magic Link'}
+                  Send Code
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </form>
