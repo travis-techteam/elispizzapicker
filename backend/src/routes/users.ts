@@ -36,6 +36,7 @@ router.get('/me', authenticate, async (req: AuthenticatedRequest, res: Response)
         phone: true,
         email: true,
         role: true,
+        lastLoginAt: true,
         createdAt: true,
       },
     });
@@ -71,6 +72,7 @@ router.get('/', authenticate, requireAdmin, async (_req: AuthenticatedRequest, r
         phone: true,
         email: true,
         role: true,
+        lastLoginAt: true,
         createdAt: true,
       },
       orderBy: { name: 'asc' },
@@ -100,6 +102,7 @@ router.get('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest,
         phone: true,
         email: true,
         role: true,
+        lastLoginAt: true,
         createdAt: true,
         votes: {
           select: {
@@ -169,6 +172,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, r
         phone: true,
         email: true,
         role: true,
+        lastLoginAt: true,
         createdAt: true,
       },
     });
@@ -248,6 +252,7 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest,
         phone: true,
         email: true,
         role: true,
+        lastLoginAt: true,
         createdAt: true,
       },
     });
