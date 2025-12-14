@@ -31,7 +31,7 @@ export default function AdminEvents() {
   });
 
   const createMutation = useMutation({
-    mutationFn: api.createEvent,
+    mutationFn: (data: Parameters<typeof api.createEvent>[0]) => api.createEvent(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['activeEvent'] });
@@ -52,7 +52,7 @@ export default function AdminEvents() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: api.deleteEvent,
+    mutationFn: (id: string) => api.deleteEvent(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['activeEvent'] });
