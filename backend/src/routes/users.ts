@@ -6,6 +6,8 @@ import { requireAdmin } from '../middleware/admin.js';
 import { AuthenticatedRequest } from '../types/index.js';
 import { smsService } from '../services/sms.service.js';
 import { emailService } from '../services/email.service.js';
+import logger from '../utils/logger.js';
+import { getPaginationParams, getSkipTake, createPaginatedResponse } from '../utils/pagination.js';
 
 const router = Router();
 
@@ -54,7 +56,7 @@ router.get('/me', authenticate, async (req: AuthenticatedRequest, res: Response)
       data: user,
     });
   } catch (error) {
-    console.error('Get current user error:', error);
+    logger.error({ err: error, userId: req.user?.userId }, 'Failed to get current user');
     res.status(500).json({
       success: false,
       error: 'Failed to get user',
@@ -63,27 +65,35 @@ router.get('/me', authenticate, async (req: AuthenticatedRequest, res: Response)
 });
 
 // List all users (Admin only)
-router.get('/', authenticate, requireAdmin, async (_req: AuthenticatedRequest, res: Response) => {
+router.get('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        email: true,
-        role: true,
-        lastLoginAt: true,
-        createdAt: true,
-      },
-      orderBy: { name: 'asc' },
-    });
+    const pagination = getPaginationParams(req.query);
+    const { skip, take } = getSkipTake(pagination);
+
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+          role: true,
+          lastLoginAt: true,
+          createdAt: true,
+        },
+        orderBy: { name: 'asc' },
+        skip,
+        take,
+      }),
+      prisma.user.count(),
+    ]);
 
     res.json({
       success: true,
-      data: users,
+      ...createPaginatedResponse(users, total, pagination),
     });
   } catch (error) {
-    console.error('List users error:', error);
+    logger.error({ err: error }, 'Failed to list users');
     res.status(500).json({
       success: false,
       error: 'Failed to list users',
@@ -128,7 +138,7 @@ router.get('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest,
       data: user,
     });
   } catch (error) {
-    console.error('Get user error:', error);
+    logger.error({ err: error, targetUserId: req.params.id }, 'Failed to get user');
     res.status(500).json({
       success: false,
       error: 'Failed to get user',
@@ -202,7 +212,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, r
       });
       return;
     }
-    console.error('Create user error:', error);
+    logger.error({ err: error }, 'Failed to create user');
     res.status(500).json({
       success: false,
       error: 'Failed to create user',
@@ -271,7 +281,7 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest,
       });
       return;
     }
-    console.error('Update user error:', error);
+    logger.error({ err: error, targetUserId: req.params.id }, 'Failed to update user');
     res.status(500).json({
       success: false,
       error: 'Failed to update user',
@@ -313,7 +323,7 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthenticatedReque
       message: 'User deleted successfully',
     });
   } catch (error) {
-    console.error('Delete user error:', error);
+    logger.error({ err: error, targetUserId: req.params.id }, 'Failed to delete user');
     res.status(500).json({
       success: false,
       error: 'Failed to delete user',

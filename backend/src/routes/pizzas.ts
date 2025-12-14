@@ -4,6 +4,7 @@ import prisma from '../utils/prisma.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
 import { AuthenticatedRequest } from '../types/index.js';
+import logger from '../utils/logger.js';
 
 const router = Router();
 
@@ -44,7 +45,7 @@ router.get('/:eventId/pizzas', authenticate, async (req: AuthenticatedRequest, r
       data: pizzas,
     });
   } catch (error) {
-    console.error('List pizzas error:', error);
+    logger.error({ err: error, eventId: req.params.eventId }, 'Failed to list pizzas');
     res.status(500).json({
       success: false,
       error: 'Failed to list pizza options',
@@ -75,7 +76,7 @@ router.get('/:eventId/pizzas/:id', authenticate, async (req: AuthenticatedReques
       data: pizza,
     });
   } catch (error) {
-    console.error('Get pizza error:', error);
+    logger.error({ err: error, eventId: req.params.eventId, pizzaId: req.params.id }, 'Failed to get pizza');
     res.status(500).json({
       success: false,
       error: 'Failed to get pizza option',
@@ -140,7 +141,7 @@ router.post('/:eventId/pizzas', authenticate, requireAdmin, async (req: Authenti
       });
       return;
     }
-    console.error('Create pizza error:', error);
+    logger.error({ err: error, eventId: req.params.eventId }, 'Failed to create pizza');
     res.status(500).json({
       success: false,
       error: 'Failed to create pizza option',
@@ -211,7 +212,7 @@ router.put('/:eventId/pizzas/:id', authenticate, requireAdmin, async (req: Authe
       });
       return;
     }
-    console.error('Update pizza error:', error);
+    logger.error({ err: error, eventId: req.params.eventId, pizzaId: req.params.id }, 'Failed to update pizza');
     res.status(500).json({
       success: false,
       error: 'Failed to update pizza option',
@@ -247,7 +248,7 @@ router.delete('/:eventId/pizzas/:id', authenticate, requireAdmin, async (req: Au
       message: 'Pizza option deleted successfully',
     });
   } catch (error) {
-    console.error('Delete pizza error:', error);
+    logger.error({ err: error, eventId: req.params.eventId, pizzaId: req.params.id }, 'Failed to delete pizza');
     res.status(500).json({
       success: false,
       error: 'Failed to delete pizza option',

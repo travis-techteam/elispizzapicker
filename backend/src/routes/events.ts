@@ -5,6 +5,8 @@ import { authenticate } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
 import { AuthenticatedRequest } from '../types/index.js';
 import { reminderService } from '../services/reminder.service.js';
+import logger from '../utils/logger.js';
+import { getPaginationParams, getSkipTake, createPaginatedResponse } from '../utils/pagination.js';
 
 const router = Router();
 
@@ -57,7 +59,7 @@ router.get('/active', authenticate, async (_req: AuthenticatedRequest, res: Resp
       data: event,
     });
   } catch (error) {
-    console.error('Get active event error:', error);
+    logger.error({ err: error }, 'Failed to get active event');
     res.status(500).json({
       success: false,
       error: 'Failed to get active event',
@@ -66,26 +68,34 @@ router.get('/active', authenticate, async (_req: AuthenticatedRequest, res: Resp
 });
 
 // List all events (any authenticated user)
-router.get('/', authenticate, async (_req: AuthenticatedRequest, res: Response) => {
+router.get('/', authenticate, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const events = await prisma.event.findMany({
-      include: {
-        createdBy: {
-          select: { name: true },
+    const pagination = getPaginationParams(req.query);
+    const { skip, take } = getSkipTake(pagination);
+
+    const [events, total] = await Promise.all([
+      prisma.event.findMany({
+        include: {
+          createdBy: {
+            select: { name: true },
+          },
+          _count: {
+            select: { votes: true, pizzaOptions: true },
+          },
         },
-        _count: {
-          select: { votes: true, pizzaOptions: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
+      prisma.event.count(),
+    ]);
 
     res.json({
       success: true,
-      data: events,
+      ...createPaginatedResponse(events, total, pagination),
     });
   } catch (error) {
-    console.error('List events error:', error);
+    logger.error({ err: error }, 'Failed to list events');
     res.status(500).json({
       success: false,
       error: 'Failed to list events',
@@ -124,7 +134,7 @@ router.get('/:id', authenticate, async (req: AuthenticatedRequest, res: Response
       data: event,
     });
   } catch (error) {
-    console.error('Get event error:', error);
+    logger.error({ err: error, eventId: req.params.id }, 'Failed to get event');
     res.status(500).json({
       success: false,
       error: 'Failed to get event',
@@ -175,7 +185,7 @@ router.post('/', authenticate, requireAdmin, async (req: AuthenticatedRequest, r
       });
       return;
     }
-    console.error('Create event error:', error);
+    logger.error({ err: error }, 'Failed to create event');
     res.status(500).json({
       success: false,
       error: 'Failed to create event',
@@ -255,7 +265,7 @@ router.put('/:id', authenticate, requireAdmin, async (req: AuthenticatedRequest,
       });
       return;
     }
-    console.error('Update event error:', error);
+    logger.error({ err: error, eventId: req.params.id }, 'Failed to update event');
     res.status(500).json({
       success: false,
       error: 'Failed to update event',
@@ -288,7 +298,7 @@ router.delete('/:id', authenticate, requireAdmin, async (req: AuthenticatedReque
       message: 'Event deleted successfully',
     });
   } catch (error) {
-    console.error('Delete event error:', error);
+    logger.error({ err: error, eventId: req.params.id }, 'Failed to delete event');
     res.status(500).json({
       success: false,
       error: 'Failed to delete event',
@@ -338,7 +348,7 @@ router.post('/:id/send-reminders', authenticate, requireAdmin, async (req: Authe
       data: result,
     });
   } catch (error) {
-    console.error('Send reminders error:', error);
+    logger.error({ err: error, eventId: req.params.id }, 'Failed to send reminders');
     res.status(500).json({
       success: false,
       error: 'Failed to send reminders',

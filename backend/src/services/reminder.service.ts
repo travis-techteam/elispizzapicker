@@ -1,6 +1,7 @@
 import prisma from '../utils/prisma.js';
 import { smsService } from './sms.service.js';
 import { config } from '../config/index.js';
+import logger from '../utils/logger.js';
 
 export class ReminderService {
   /**
@@ -30,7 +31,7 @@ export class ReminderService {
 
       // Check if the reminder time has passed
       if (now >= reminderTime) {
-        console.log(`Sending reminders for event: ${event.name}`);
+        logger.info({ eventId: event.id, eventName: event.name }, 'Sending reminders for event');
         await this.sendRemindersForEvent(event.id, event.name, event.deadline);
       }
     }
@@ -60,7 +61,7 @@ export class ReminderService {
     });
 
     if (usersToRemind.length === 0) {
-      console.log(`No users need reminders for event: ${eventName}`);
+      logger.debug({ eventId, eventName }, 'No users need reminders for event');
       // Still mark as sent so we don't keep checking
       await prisma.event.update({
         where: { id: eventId },
@@ -86,7 +87,7 @@ export class ReminderService {
           failed++;
         }
       } catch (error) {
-        console.error(`Failed to send reminder to ${user.name}:`, error);
+        logger.error({ err: error, userId: user.id, userName: user.name }, 'Failed to send reminder');
         failed++;
       }
     }
@@ -97,9 +98,7 @@ export class ReminderService {
       data: { reminderSentAt: new Date() },
     });
 
-    console.log(
-      `Sent ${sent} reminders for event: ${eventName} (${failed} failed)`
-    );
+    logger.info({ eventId, eventName, sent, failed }, 'Finished sending reminders for event');
     return { sent, failed };
   }
 

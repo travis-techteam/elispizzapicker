@@ -1,4 +1,5 @@
 import { reminderService } from './reminder.service.js';
+import logger from '../utils/logger.js';
 
 export class SchedulerService {
   private intervalId: NodeJS.Timeout | null = null;
@@ -6,11 +7,11 @@ export class SchedulerService {
 
   start(): void {
     if (this.intervalId) {
-      console.log('Scheduler already running');
+      logger.warn('Scheduler already running');
       return;
     }
 
-    console.log('Starting reminder scheduler (checking every 60 seconds)');
+    logger.info({ intervalMs: this.INTERVAL_MS }, 'Starting reminder scheduler');
 
     // Run immediately on start to catch any missed reminders
     this.tick();
@@ -23,7 +24,7 @@ export class SchedulerService {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
-      console.log('Scheduler stopped');
+      logger.info('Scheduler stopped');
     }
   }
 
@@ -31,7 +32,7 @@ export class SchedulerService {
     try {
       await reminderService.processReminders();
     } catch (error) {
-      console.error('Scheduler tick error:', error);
+      logger.error({ err: error }, 'Scheduler tick error');
     }
   }
 }

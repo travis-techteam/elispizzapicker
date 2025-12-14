@@ -2,37 +2,37 @@ import app from './app.js';
 import { config } from './config/index.js';
 import prisma from './utils/prisma.js';
 import { schedulerService } from './services/scheduler.service.js';
+import logger from './utils/logger.js';
 
 const start = async () => {
   try {
     // Test database connection
     await prisma.$connect();
-    console.log('Connected to database');
+    logger.info('Connected to database');
 
     // Start the reminder scheduler
     schedulerService.start();
 
     // Start server
     app.listen(config.port, () => {
-      console.log(`Server running on port ${config.port}`);
-      console.log(`Environment: ${config.nodeEnv}`);
+      logger.info({ port: config.port, env: config.nodeEnv }, 'Server started');
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.fatal({ err: error }, 'Failed to start server');
     process.exit(1);
   }
 };
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('Shutting down gracefully...');
+  logger.info('Shutting down gracefully (SIGINT)...');
   schedulerService.stop();
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-  console.log('Shutting down gracefully...');
+  logger.info('Shutting down gracefully (SIGTERM)...');
   schedulerService.stop();
   await prisma.$disconnect();
   process.exit(0);

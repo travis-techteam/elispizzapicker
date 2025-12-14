@@ -1,9 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import pinoHttp from 'pino-http';
+import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
+import { swaggerSpec } from './config/swagger.js';
+import logger from './utils/logger.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -26,6 +30,16 @@ app.use(
   cors({
     origin: config.frontendUrl,
     credentials: true,
+  })
+);
+
+// HTTP request logging
+app.use(
+  pinoHttp({
+    logger,
+    autoLogging: {
+      ignore: (req) => req.url === '/api/health',
+    },
   })
 );
 
@@ -61,6 +75,18 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'API is running' });
 });
 
+// API Documentation
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: "Eli's Pizza Picker API Docs",
+}));
+
+// OpenAPI spec endpoint
+app.get('/api/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -93,7 +119,7 @@ app.use('/api/*', (req, res) => {
 
 // Error handler
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Error:', err);
+  logger.error({ err, url: req.url, method: req.method }, 'Unhandled error');
   res.status(500).json({
     success: false,
     error: config.nodeEnv === 'development' ? err.message : 'Internal server error',

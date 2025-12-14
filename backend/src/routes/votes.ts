@@ -3,6 +3,8 @@ import { z } from 'zod';
 import prisma from '../utils/prisma.js';
 import { authenticate } from '../middleware/auth.js';
 import { AuthenticatedRequest } from '../types/index.js';
+import logger from '../utils/logger.js';
+import { getPaginationParams, getSkipTake, createPaginatedResponse } from '../utils/pagination.js';
 
 const router = Router();
 
@@ -49,36 +51,44 @@ router.get('/:eventId/votes', authenticate, async (req: AuthenticatedRequest, re
       return;
     }
 
-    const votes = await prisma.vote.findMany({
-      where: { eventId: req.params.eventId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        choices: {
-          include: {
-            pizzaOption: {
-              select: {
-                id: true,
-                name: true,
-              },
+    const pagination = getPaginationParams(req.query);
+    const { skip, take } = getSkipTake(pagination);
+
+    const [votes, total] = await Promise.all([
+      prisma.vote.findMany({
+        where: { eventId: req.params.eventId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
             },
           },
-          orderBy: { priority: 'asc' },
+          choices: {
+            include: {
+              pizzaOption: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+            orderBy: { priority: 'asc' },
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+      }),
+      prisma.vote.count({ where: { eventId: req.params.eventId } }),
+    ]);
 
     res.json({
       success: true,
-      data: votes,
+      ...createPaginatedResponse(votes, total, pagination),
     });
   } catch (error) {
-    console.error('Get votes error:', error);
+    logger.error({ err: error, eventId: req.params.eventId }, 'Failed to get votes');
     res.status(500).json({
       success: false,
       error: 'Failed to get votes',
@@ -125,7 +135,7 @@ router.get('/:eventId/votes/me', authenticate, async (req: AuthenticatedRequest,
       data: vote,
     });
   } catch (error) {
-    console.error('Get my vote error:', error);
+    logger.error({ err: error, eventId: req.params.eventId, userId: req.user?.userId }, 'Failed to get user vote');
     res.status(500).json({
       success: false,
       error: 'Failed to get vote',
@@ -190,37 +200,39 @@ router.post('/:eventId/votes', authenticate, async (req: AuthenticatedRequest, r
     let vote;
 
     if (existingVote) {
-      // Update existing vote
-      // First, delete old choices
-      await prisma.voteChoice.deleteMany({
-        where: { voteId: existingVote.id },
-      });
+      // Update existing vote using a transaction to ensure atomicity
+      vote = await prisma.$transaction(async (tx) => {
+        // First, delete old choices
+        await tx.voteChoice.deleteMany({
+          where: { voteId: existingVote.id },
+        });
 
-      // Update vote and create new choices
-      vote = await prisma.vote.update({
-        where: { id: existingVote.id },
-        data: {
-          sliceCount: data.sliceCount,
-          choices: {
-            create: data.choices.map((choice) => ({
-              pizzaOptionId: choice.pizzaOptionId,
-              priority: choice.priority,
-            })),
+        // Update vote and create new choices
+        return tx.vote.update({
+          where: { id: existingVote.id },
+          data: {
+            sliceCount: data.sliceCount,
+            choices: {
+              create: data.choices.map((choice) => ({
+                pizzaOptionId: choice.pizzaOptionId,
+                priority: choice.priority,
+              })),
+            },
           },
-        },
-        include: {
-          choices: {
-            include: {
-              pizzaOption: {
-                select: {
-                  id: true,
-                  name: true,
+          include: {
+            choices: {
+              include: {
+                pizzaOption: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
                 },
               },
+              orderBy: { priority: 'asc' },
             },
-            orderBy: { priority: 'asc' },
           },
-        },
+        });
       });
 
       res.json({
@@ -272,7 +284,7 @@ router.post('/:eventId/votes', authenticate, async (req: AuthenticatedRequest, r
       });
       return;
     }
-    console.error('Submit vote error:', error);
+    logger.error({ err: error, eventId: req.params.eventId, userId: req.user?.userId }, 'Failed to submit vote');
     res.status(500).json({
       success: false,
       error: 'Failed to submit vote',
@@ -332,7 +344,7 @@ router.delete('/:eventId/votes/me', authenticate, async (req: AuthenticatedReque
       message: 'Vote removed successfully',
     });
   } catch (error) {
-    console.error('Delete vote error:', error);
+    logger.error({ err: error, eventId: req.params.eventId, userId: req.user?.userId }, 'Failed to delete vote');
     res.status(500).json({
       success: false,
       error: 'Failed to delete vote',

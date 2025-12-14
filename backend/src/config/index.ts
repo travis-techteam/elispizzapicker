@@ -8,14 +8,27 @@ const __dirname = path.dirname(__filename);
 // Load environment variables from root .env file
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
+const nodeEnv = process.env.NODE_ENV || 'development';
+const isProduction = nodeEnv === 'production';
+
+// Validate required environment variables in production
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (isProduction && !secret) {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  return secret || 'dev-secret-change-me';
+}
+
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
+  isProduction,
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
   appUrl: process.env.APP_URL || 'http://localhost:5173',
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'dev-secret-change-me',
+    secret: getJwtSecret(),
     expiresIn: process.env.JWT_EXPIRES_IN || '1h',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
