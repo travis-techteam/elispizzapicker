@@ -33,7 +33,7 @@ export default function AdminUsers() {
   });
 
   const createMutation = useMutation({
-    mutationFn: api.createUser,
+    mutationFn: (data: Parameters<typeof api.createUser>[0]) => api.createUser(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       closeModal();
