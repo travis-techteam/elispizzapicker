@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="text-center">
-        <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-6">
+        <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full mb-6">
           <Pizza className="w-12 h-12 text-text-muted" />
         </div>
         <h1 className="text-4xl font-bold text-text mb-2">404</h1>

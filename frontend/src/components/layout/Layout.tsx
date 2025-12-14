@@ -62,7 +62,7 @@ export default function Layout() {
       </main>
 
       {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-gray-200 safe-area-inset-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-gray-200 dark:border-gray-700 safe-area-inset-bottom">
         <div className="max-w-lg mx-auto flex justify-around">
           <NavItem to="/" icon={Home} label="Home" />
           <NavItem to="/vote" icon={Vote} label="Vote" />

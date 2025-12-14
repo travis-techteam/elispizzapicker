@@ -32,7 +32,7 @@ export default function AdminReport() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/admin/events')} className="p-2 hover:bg-gray-100 rounded-lg">
+          <button onClick={() => navigate('/admin/events')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-2xl font-bold text-text">Order Report</h1>
@@ -52,7 +52,7 @@ export default function AdminReport() {
     <div className="space-y-6 print:space-y-4">
       {/* Header */}
       <div className="flex items-center gap-4 print:hidden">
-        <button onClick={() => navigate('/admin/events')} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => navigate('/admin/events')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -109,7 +109,7 @@ export default function AdminReport() {
               {report.pizzaOrders.map((pizza, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
                     <span className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
@@ -177,7 +177,7 @@ export default function AdminReport() {
               {report.voterBreakdown.map((voter) => (
                 <div
                   key={voter.userId}
-                  className="border-b border-gray-100 pb-3 last:border-0 last:pb-0"
+                  className="border-b border-gray-100 dark:border-gray-700 pb-3 last:border-0 last:pb-0"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium">{voter.userName}</span>

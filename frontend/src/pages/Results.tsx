@@ -122,10 +122,10 @@ export default function Results() {
                           index === 0
                             ? 'bg-accent-500 text-white'
                             : index === 1
-                            ? 'bg-gray-300 text-text'
+                            ? 'bg-gray-300 dark:bg-gray-600 text-text'
                             : index === 2
                             ? 'bg-secondary-300 text-white'
-                            : 'bg-gray-100 text-text-muted'
+                            : 'bg-gray-100 dark:bg-gray-700 text-text-muted'
                         }`}
                       >
                         {index + 1}
@@ -136,7 +136,7 @@ export default function Results() {
                       {tally.points} pts
                     </span>
                   </div>
-                  <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500"
                       style={{ width: `${(tally.points / maxPoints) * 100}%` }}
@@ -160,7 +160,7 @@ export default function Results() {
           ) : (
             <div className="space-y-4">
               {votes.map((vote) => (
-                <div key={vote.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                <div key={vote.id} className="border-b border-gray-100 dark:border-gray-700 pb-4 last:border-0 last:pb-0">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium">{vote.user?.name}</span>
                     <span className="text-sm text-text-muted">{vote.sliceCount} slices</span>

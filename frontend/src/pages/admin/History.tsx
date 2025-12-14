@@ -173,12 +173,12 @@ export default function AdminHistory() {
                         className={cn(
                           'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold',
                           index === 0
-                            ? 'bg-accent-100 text-accent-700'
+                            ? 'bg-accent-100 dark:bg-accent-900/50 text-accent-700 dark:text-accent-300'
                             : index === 1
-                              ? 'bg-gray-200 text-gray-600'
+                              ? 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                               : index === 2
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-gray-100 text-gray-500'
+                                ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                         )}
                       >
                         {index + 1}

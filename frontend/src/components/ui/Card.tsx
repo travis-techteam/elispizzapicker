@@ -10,7 +10,7 @@ export default function Card({ children, className, onClick }: CardProps) {
   return (
     <div
       className={cn(
-        'bg-surface rounded-xl shadow-sm border border-gray-100 p-4',
+        'bg-surface rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4',
         onClick && 'cursor-pointer hover:shadow-md transition-shadow',
         className
       )}
@@ -38,5 +38,5 @@ export function CardContent({ children, className }: { children: React.ReactNode
 }
 
 export function CardFooter({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn('mt-4 pt-4 border-t border-gray-100', className)}>{children}</div>;
+  return <div className={cn('mt-4 pt-4 border-t border-gray-100 dark:border-gray-700', className)}>{children}</div>;
 }

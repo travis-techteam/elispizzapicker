@@ -259,7 +259,7 @@ export default function Vote() {
           <div className="flex items-center justify-center gap-4">
             <button
               onClick={() => setSliceCount(Math.max(1, sliceCount - 1))}
-              className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               disabled={sliceCount <= 1}
             >
               <Minus className="w-5 h-5" />
@@ -267,7 +267,7 @@ export default function Vote() {
             <span className="text-4xl font-bold text-primary w-16 text-center">{sliceCount}</span>
             <button
               onClick={() => setSliceCount(Math.min(4, sliceCount + 1))}
-              className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               disabled={sliceCount >= 4}
             >
               <Plus className="w-5 h-5" />
@@ -328,8 +328,8 @@ export default function Vote() {
                   className={cn(
                     'p-3 rounded-lg border text-left transition-colors',
                     selectedPizzas.length >= 3
-                      ? 'border-gray-200 bg-gray-50 text-text-muted cursor-not-allowed'
-                      : 'border-gray-200 hover:border-primary hover:bg-primary-50'
+                      ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-text-muted cursor-not-allowed'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-primary hover:bg-primary-50 dark:hover:bg-primary-900/30'
                   )}
                 >
                   <div className="font-medium text-sm">{pizza.name}</div>
@@ -345,7 +345,7 @@ export default function Vote() {
 
       {/* Error message */}
       {error && (
-        <div className="flex items-center gap-2 text-red-500 bg-red-50 p-3 rounded-lg">
+        <div className="flex items-center gap-2 text-red-500 bg-red-50 dark:bg-red-900/30 p-3 rounded-lg">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span className="text-sm">{error}</span>
         </div>
@@ -391,7 +391,7 @@ function SortablePizzaItem({ pizza, onRemove }: SortablePizzaItemProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex items-center gap-3 p-3 bg-gray-50 rounded-lg',
+        'flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg',
         isDragging && 'opacity-50'
       )}
     >
@@ -406,10 +406,10 @@ function SortablePizzaItem({ pizza, onRemove }: SortablePizzaItemProps) {
       >
         {pizza.priority}
       </span>
-      <span className="flex-1 font-medium">{pizza.name}</span>
+      <span className="flex-1 font-medium text-text">{pizza.name}</span>
       <button
         onClick={onRemove}
-        className="p-1 rounded hover:bg-gray-200 transition-colors"
+        className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
       >
         <Minus className="w-4 h-4 text-text-muted" />
       </button>

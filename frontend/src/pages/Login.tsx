@@ -101,7 +101,7 @@ export default function Login() {
         </div>
 
         {/* Login form */}
-        <div className="bg-surface rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-surface rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           {step === 'input' ? (
             <>
               <form onSubmit={handleRequestCode}>

@@ -102,7 +102,7 @@ export default function Home() {
         </Card>
       ) : (
         <Card className="text-center py-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
             <Calendar className="w-8 h-8 text-text-muted" />
           </div>
           <h3 className="text-lg font-semibold text-text mb-2">No Active Event</h3>

@@ -167,7 +167,7 @@ export default function AdminUsers() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin')} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => navigate('/admin')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -186,7 +186,7 @@ export default function AdminUsers() {
           <Card key={user.id} className="flex items-center gap-4">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                user.role === 'ADMIN' ? 'bg-primary-100' : 'bg-gray-100'
+                user.role === 'ADMIN' ? 'bg-primary-100 dark:bg-primary-900/30' : 'bg-gray-100 dark:bg-gray-800'
               }`}
             >
               {user.role === 'ADMIN' ? (
@@ -212,14 +212,14 @@ export default function AdminUsers() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => openEditModal(user)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <Pencil className="w-4 h-4 text-text-muted" />
               </button>
               {user.id !== currentUser?.id && (
                 <button
                   onClick={() => handleDelete(user)}
-                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                   disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
@@ -274,7 +274,7 @@ export default function AdminUsers() {
                 type="checkbox"
                 checked={formData.sendInvite}
                 onChange={(e) => setFormData({ ...formData, sendInvite: e.target.checked })}
-                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary bg-surface"
               />
               <span className="text-sm text-text">Send invite notification</span>
             </label>

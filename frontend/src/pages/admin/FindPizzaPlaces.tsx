@@ -217,7 +217,7 @@ export default function FindPizzaPlaces() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-2xl font-bold text-text">Find Pizza Places</h1>
@@ -239,7 +239,7 @@ export default function FindPizzaPlaces() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -317,7 +317,7 @@ export default function FindPizzaPlaces() {
       {/* Google Map */}
       <Card className="overflow-hidden">
         {!isLoaded ? (
-          <div className="h-[400px] flex items-center justify-center bg-gray-100">
+          <div className="h-[400px] flex items-center justify-center bg-gray-100 dark:bg-gray-800">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : (

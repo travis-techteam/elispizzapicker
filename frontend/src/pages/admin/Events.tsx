@@ -151,7 +151,7 @@ export default function AdminEvents() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin')} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => navigate('/admin')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -191,7 +191,7 @@ export default function AdminEvents() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -213,8 +213,8 @@ export default function AdminEvents() {
                   onClick={() => toggleActive(event)}
                   className={`p-2 rounded-lg transition-colors ${
                     event.isActive
-                      ? 'bg-green-100 text-green-600'
-                      : 'hover:bg-gray-100 text-text-muted'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-text-muted'
                   }`}
                   title={event.isActive ? 'Currently active' : 'Set as active'}
                 >
@@ -222,13 +222,13 @@ export default function AdminEvents() {
                 </button>
                 <button
                   onClick={() => openEditModal(event)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   <Pencil className="w-4 h-4 text-text-muted" />
                 </button>
                 <button
                   onClick={() => handleDelete(event)}
-                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                   disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
@@ -274,7 +274,7 @@ export default function AdminEvents() {
               type="checkbox"
               checked={formData.isActive}
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary bg-surface"
             />
             <span className="text-sm text-text">Set as active event</span>
           </label>

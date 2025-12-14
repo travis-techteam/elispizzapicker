@@ -16,7 +16,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary: 'bg-primary text-white hover:bg-primary-hover focus:ring-primary',
       secondary: 'bg-secondary text-white hover:bg-secondary-700 focus:ring-secondary',
       outline: 'border-2 border-primary text-primary hover:bg-primary hover:text-white focus:ring-primary',
-      ghost: 'text-text hover:bg-gray-100 focus:ring-gray-300',
+      ghost: 'text-text hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-300 dark:focus:ring-gray-600',
       danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     };
 

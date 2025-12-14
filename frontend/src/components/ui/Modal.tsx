@@ -43,11 +43,11 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
       >
         {/* Header */}
         {title && (
-          <div className="sticky top-0 bg-surface flex items-center justify-between p-4 border-b border-gray-100">
+          <div className="sticky top-0 bg-surface flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-text">{title}</h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               <X className="w-5 h-5 text-text-muted" />
             </button>

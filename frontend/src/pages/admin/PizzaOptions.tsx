@@ -170,7 +170,7 @@ export default function AdminPizzaOptions() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin/events')} className="p-2 hover:bg-gray-100 rounded-lg">
+        <button onClick={() => navigate('/admin/events')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
@@ -209,13 +209,13 @@ export default function AdminPizzaOptions() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => openEditModal(pizza)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   <Pencil className="w-4 h-4 text-text-muted" />
                 </button>
                 <button
                   onClick={() => handleDelete(pizza)}
-                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                   disabled={deleteMutation.isPending}
                 >
                   <Trash2 className="w-4 h-4 text-red-500" />
@@ -287,13 +287,13 @@ export default function AdminPizzaOptions() {
               {formData.toppings.map((topping) => (
                 <span
                   key={topping}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full text-sm"
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-sm text-text"
                 >
                   {topping}
                   <button
                     type="button"
                     onClick={() => removeTopping(topping)}
-                    className="p-0.5 hover:bg-gray-200 rounded-full"
+                    className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full"
                   >
                     <X className="w-3 h-3" />
                   </button>

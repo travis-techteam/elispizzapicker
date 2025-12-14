@@ -72,14 +72,14 @@ export default function AdminDashboard() {
             <div className="flex gap-2">
               <button
                 onClick={() => navigate(`/admin/events/${activeEvent.id}/pizzas`)}
-                className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-white rounded-lg text-sm font-medium text-text hover:bg-gray-50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-text hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 <Pizza className="w-4 h-4" />
                 Manage Pizzas
               </button>
               <button
                 onClick={() => navigate(`/admin/events/${activeEvent.id}/report`)}
-                className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-white rounded-lg text-sm font-medium text-text hover:bg-gray-50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-text hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 <FileText className="w-4 h-4" />
                 View Report
