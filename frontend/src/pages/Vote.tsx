@@ -74,6 +74,13 @@ export default function Vote() {
     },
   });
 
+  // useCallback must be called before any conditional returns (Rules of Hooks)
+  const handleDeadlineExpired = useCallback(() => {
+    if (event?.id) {
+      navigate(`/results/${event.id}`);
+    }
+  }, [navigate, event?.id]);
+
   if (eventLoading) {
     return <LoadingScreen />;
   }
@@ -90,10 +97,6 @@ export default function Vote() {
       </div>
     );
   }
-
-  const handleDeadlineExpired = useCallback(() => {
-    navigate(`/results/${event.id}`);
-  }, [navigate, event.id]);
 
   const deadline = new Date(event.deadline);
   const isDeadlinePassed = deadline < new Date();
