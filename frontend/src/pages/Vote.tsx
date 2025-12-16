@@ -683,7 +683,7 @@ export default function Vote() {
             Eli thanks you for your contribution, and like she always says:
           </p>
           {randomQuote && (
-            <blockquote className="mb-6 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg border-l-4 border-primary-500">
+            <blockquote className="mb-6 px-4 py-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
               <p className="text-text italic mb-2">"{randomQuote.quote}"</p>
               <footer className="text-text-muted text-sm">— {randomQuote.character}</footer>
             </blockquote>
