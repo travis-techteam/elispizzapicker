@@ -19,13 +19,16 @@ const voteSchema = z.object({
         priority: z.union([z.literal(1), z.literal(2), z.literal(3)]),
       })
     )
-    .length(3)
+    .min(2)
+    .max(3)
     .refine(
       (choices) => {
         const priorities = choices.map((c) => c.priority);
-        return priorities.includes(1) && priorities.includes(2) && priorities.includes(3);
+        // Must have sequential priorities starting from 1
+        const sortedPriorities = [...priorities].sort();
+        return sortedPriorities.every((p, i) => p === i + 1);
       },
-      { message: 'Must have exactly one choice for each priority (1, 2, 3)' }
+      { message: 'Choices must have sequential priorities starting from 1' }
     )
     .refine(
       (choices) => {

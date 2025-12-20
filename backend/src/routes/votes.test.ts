@@ -11,13 +11,16 @@ const voteSchema = z.object({
         priority: z.union([z.literal(1), z.literal(2), z.literal(3)]),
       })
     )
-    .length(3)
+    .min(2)
+    .max(3)
     .refine(
       (choices) => {
         const priorities = choices.map((c) => c.priority);
-        return priorities.includes(1) && priorities.includes(2) && priorities.includes(3);
+        // Must have sequential priorities starting from 1
+        const sortedPriorities = [...priorities].sort();
+        return sortedPriorities.every((p, i) => p === i + 1);
       },
-      { message: 'Must have exactly one choice for each priority (1, 2, 3)' }
+      { message: 'Choices must have sequential priorities starting from 1' }
     )
     .refine(
       (choices) => {
@@ -37,7 +40,6 @@ describe('Vote Schema Validation', () => {
           choices: [
             { pizzaOptionId: 'pizza-1', priority: 1 },
             { pizzaOptionId: 'pizza-2', priority: 2 },
-            { pizzaOptionId: 'pizza-3', priority: 3 },
           ],
         });
         expect(result.success).toBe(true);
@@ -50,7 +52,6 @@ describe('Vote Schema Validation', () => {
         choices: [
           { pizzaOptionId: 'pizza-1', priority: 1 },
           { pizzaOptionId: 'pizza-2', priority: 2 },
-          { pizzaOptionId: 'pizza-3', priority: 3 },
         ],
       });
       expect(result.success).toBe(false);
@@ -62,7 +63,6 @@ describe('Vote Schema Validation', () => {
         choices: [
           { pizzaOptionId: 'pizza-1', priority: 1 },
           { pizzaOptionId: 'pizza-2', priority: 2 },
-          { pizzaOptionId: 'pizza-3', priority: 3 },
         ],
       });
       expect(result.success).toBe(false);
@@ -74,7 +74,6 @@ describe('Vote Schema Validation', () => {
         choices: [
           { pizzaOptionId: 'pizza-1', priority: 1 },
           { pizzaOptionId: 'pizza-2', priority: 2 },
-          { pizzaOptionId: 'pizza-3', priority: 3 },
         ],
       });
       expect(result.success).toBe(false);
@@ -82,53 +81,18 @@ describe('Vote Schema Validation', () => {
   });
 
   describe('choices', () => {
-    it('should require exactly 3 choices', () => {
-      const twoChoices = voteSchema.safeParse({
+    it('should accept 2 choices', () => {
+      const result = voteSchema.safeParse({
         sliceCount: 2,
         choices: [
           { pizzaOptionId: 'pizza-1', priority: 1 },
           { pizzaOptionId: 'pizza-2', priority: 2 },
         ],
       });
-      expect(twoChoices.success).toBe(false);
-
-      const fourChoices = voteSchema.safeParse({
-        sliceCount: 2,
-        choices: [
-          { pizzaOptionId: 'pizza-1', priority: 1 },
-          { pizzaOptionId: 'pizza-2', priority: 2 },
-          { pizzaOptionId: 'pizza-3', priority: 3 },
-          { pizzaOptionId: 'pizza-4', priority: 1 as 1 | 2 | 3 },
-        ],
-      });
-      expect(fourChoices.success).toBe(false);
+      expect(result.success).toBe(true);
     });
 
-    it('should require priorities 1, 2, and 3', () => {
-      const result = voteSchema.safeParse({
-        sliceCount: 2,
-        choices: [
-          { pizzaOptionId: 'pizza-1', priority: 1 },
-          { pizzaOptionId: 'pizza-2', priority: 1 },
-          { pizzaOptionId: 'pizza-3', priority: 1 },
-        ],
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject duplicate pizza options', () => {
-      const result = voteSchema.safeParse({
-        sliceCount: 2,
-        choices: [
-          { pizzaOptionId: 'pizza-1', priority: 1 },
-          { pizzaOptionId: 'pizza-1', priority: 2 },
-          { pizzaOptionId: 'pizza-3', priority: 3 },
-        ],
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('should accept valid choices', () => {
+    it('should accept 3 choices', () => {
       const result = voteSchema.safeParse({
         sliceCount: 2,
         choices: [
@@ -140,13 +104,68 @@ describe('Vote Schema Validation', () => {
       expect(result.success).toBe(true);
     });
 
+    it('should reject 1 choice', () => {
+      const result = voteSchema.safeParse({
+        sliceCount: 2,
+        choices: [
+          { pizzaOptionId: 'pizza-1', priority: 1 },
+        ],
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject 4 choices', () => {
+      const result = voteSchema.safeParse({
+        sliceCount: 2,
+        choices: [
+          { pizzaOptionId: 'pizza-1', priority: 1 },
+          { pizzaOptionId: 'pizza-2', priority: 2 },
+          { pizzaOptionId: 'pizza-3', priority: 3 },
+          { pizzaOptionId: 'pizza-4', priority: 1 as 1 | 2 | 3 },
+        ],
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('should require sequential priorities starting from 1', () => {
+      // Missing priority 1
+      const missingOne = voteSchema.safeParse({
+        sliceCount: 2,
+        choices: [
+          { pizzaOptionId: 'pizza-1', priority: 2 },
+          { pizzaOptionId: 'pizza-2', priority: 3 },
+        ],
+      });
+      expect(missingOne.success).toBe(false);
+
+      // Duplicate priorities
+      const duplicates = voteSchema.safeParse({
+        sliceCount: 2,
+        choices: [
+          { pizzaOptionId: 'pizza-1', priority: 1 },
+          { pizzaOptionId: 'pizza-2', priority: 1 },
+        ],
+      });
+      expect(duplicates.success).toBe(false);
+    });
+
+    it('should reject duplicate pizza options', () => {
+      const result = voteSchema.safeParse({
+        sliceCount: 2,
+        choices: [
+          { pizzaOptionId: 'pizza-1', priority: 1 },
+          { pizzaOptionId: 'pizza-1', priority: 2 },
+        ],
+      });
+      expect(result.success).toBe(false);
+    });
+
     it('should reject empty pizza option IDs', () => {
       const result = voteSchema.safeParse({
         sliceCount: 2,
         choices: [
           { pizzaOptionId: '', priority: 1 },
           { pizzaOptionId: 'pizza-2', priority: 2 },
-          { pizzaOptionId: 'pizza-3', priority: 3 },
         ],
       });
       expect(result.success).toBe(false);

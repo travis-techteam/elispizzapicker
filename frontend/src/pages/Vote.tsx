@@ -335,8 +335,9 @@ export default function Vote() {
   const [randomQuote, setRandomQuote] = useState<typeof FUNNY_QUOTES[0] | null>(null);
 
   // Fetch active event or specific event
+  // Use 'activeEvent' key when no eventId to share cache with Home page
   const { data: eventResponse, isLoading: eventLoading } = useQuery({
-    queryKey: ['event', eventId],
+    queryKey: eventId ? ['event', eventId] : ['activeEvent'],
     queryFn: () => (eventId ? api.getEvent(eventId) : api.getActiveEvent()),
   });
 
@@ -509,8 +510,8 @@ export default function Vote() {
   const handleSubmit = () => {
     setError('');
 
-    if (selectedPizzas.length !== 3) {
-      setError('Please select exactly 3 pizza choices');
+    if (selectedPizzas.length < 2 || selectedPizzas.length > 3) {
+      setError('Please select 2 or 3 pizza choices');
       return;
     }
 
@@ -587,13 +588,13 @@ export default function Vote() {
       {/* Selected Pizzas */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Your Top 3 Choices</CardTitle>
-          <p className="text-sm text-text-muted">Drag to reorder priority (1st = highest)</p>
+          <CardTitle className="text-base">Your Top Choices</CardTitle>
+          <p className="text-sm text-text-muted">Select 2-3 pizzas. Drag to reorder priority (1st = highest)</p>
         </CardHeader>
         <CardContent>
           {selectedPizzas.length === 0 ? (
             <p className="text-center text-text-muted py-4">
-              Select 3 pizzas from the options below
+              Select 2-3 pizzas from the options below
             </p>
           ) : (
             <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -664,7 +665,7 @@ export default function Vote() {
         onClick={handleSubmit}
         className="w-full"
         size="lg"
-        disabled={selectedPizzas.length !== 3}
+        disabled={selectedPizzas.length < 2}
         isLoading={submitMutation.isPending}
       >
         {myVoteResponse?.data ? 'Update Vote' : 'Submit Vote'}
