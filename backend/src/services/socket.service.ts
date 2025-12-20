@@ -16,12 +16,26 @@ import type {
 
 let io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> | null = null;
 
+// Allow web frontend and native Capacitor apps
+const allowedOrigins = [
+  config.frontendUrl,
+  'capacitor://localhost',  // iOS
+  'http://localhost',       // Android
+];
+
 export function initializeSocket(httpServer: HttpServer): Server {
   io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(
     httpServer,
     {
       cors: {
-        origin: config.frontendUrl,
+        origin: (origin, callback) => {
+          // Allow requests with no origin (mobile apps, etc.)
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error('Not allowed by CORS'));
+          }
+        },
         methods: ['GET', 'POST'],
         credentials: true,
       },

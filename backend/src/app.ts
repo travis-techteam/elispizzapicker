@@ -35,9 +35,23 @@ const app = express();
 app.set('trust proxy', 1);
 
 // CORS configuration
+// Allow web frontend and native Capacitor apps
+const allowedOrigins = [
+  config.frontendUrl,
+  'capacitor://localhost',  // iOS
+  'http://localhost',       // Android
+];
+
 app.use(
   cors({
-    origin: config.frontendUrl,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );

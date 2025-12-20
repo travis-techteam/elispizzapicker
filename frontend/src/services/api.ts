@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import type {
   ApiResponse,
   AuthTokens,
@@ -13,7 +14,10 @@ import type {
   PaginatedResponse,
 } from '../types';
 
-const API_BASE = '/api';
+// Use full URL for native apps, relative path for web
+const API_BASE = Capacitor.isNativePlatform()
+  ? 'https://elispizzapicker.com/api'
+  : '/api';
 
 class ApiService {
   private accessToken: string | null = null;

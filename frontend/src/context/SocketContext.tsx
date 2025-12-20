@@ -1,6 +1,12 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+
+// Use full URL for native apps, window.location.origin for web
+const SOCKET_URL = Capacitor.isNativePlatform()
+  ? 'https://elispizzapicker.com'
+  : window.location.origin;
 
 interface VoteUpdatePayload {
   eventId: string;
@@ -63,7 +69,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     if (!token) return;
 
     // Create socket connection
-    const newSocket: TypedSocket = io(window.location.origin, {
+    const newSocket: TypedSocket = io(SOCKET_URL, {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,
