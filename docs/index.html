@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eli's Pizza Picker</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #FFFBF7 0%, #FFF5EB 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        h1 {
+            color: #E84C3D;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .tagline {
+            color: #666;
+            font-size: 1.2rem;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #E84C3D;
+            margin-bottom: 15px;
+        }
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .links a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #E84C3D;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .links a:hover {
+            background: #C0392B;
+        }
+        .links a.secondary {
+            background: #6c757d;
+        }
+        .links a.secondary:hover {
+            background: #545b62;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Eli's Pizza Picker</h1>
+            <p class="tagline">The fun way to decide what pizza to order!</p>
+        </header>
+
+        <div class="card">
+            <h2>About the App</h2>
+            <p>Eli's Pizza Picker helps groups decide on pizza orders through a simple voting system. Everyone ranks their top pizza choices, and the app calculates the optimal order based on everyone's preferences.</p>
+            <p style="margin-top: 15px;"><strong>Features:</strong></p>
+            <ul style="margin-top: 10px; margin-left: 20px;">
+                <li>Easy voting with drag-and-drop ranking</li>
+                <li>Real-time vote updates</li>
+                <li>Smart order recommendations</li>
+                <li>Find nearby pizza places</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Legal & Support</h2>
+            <div class="links">
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html" class="secondary">Terms of Service</a>
+                <a href="support.html" class="secondary">Support</a>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; 2024 Eli's Pizza Picker. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
