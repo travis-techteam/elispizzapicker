@@ -51,3 +51,16 @@ tmp/
 temp/
 *.tmp
 *.temp
+
+# Capacitor - iOS
+frontend/ios/App/Pods/
+frontend/ios/App/App.xcworkspace/xcuserdata/
+frontend/ios/App/App.xcodeproj/xcuserdata/
+frontend/ios/DerivedData/
+
+# Capacitor - Android
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/app/build/
+frontend/android/local.properties
+frontend/android/.idea/
